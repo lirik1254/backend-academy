@@ -1,0 +1,55 @@
+[33mcommit b5c7271ffb80d593726ef215bf5e4c0c4608a515[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: lirik1254 <kirill_shulzhik@mail.ru>
+Date:   Thu Sep 5 01:55:19 2024 +0500
+
+    fix: fixed checkstyle issues
+
+[33mcommit 5112bd01173d0f2cde1b67ecc4d2b4096bb57922[m
+Author: lirik1254 <kirill_shulzhik@mail.ru>
+Date:   Thu Sep 5 01:23:43 2024 +0500
+
+    feat: Added a dictionary of words and a method that selects a random word according to the selected difficulty and category
+
+[33mcommit 574281dad97baf13cc51f7cdc415e190086f6149[m
+Author: lirik1254 <kirill_shulzhik@mail.ru>
+Date:   Thu Sep 5 01:23:35 2024 +0500
+
+    feat: Added a dictionary of words and a method that selects a random word according to the selected difficulty and category
+
+[33mcommit e29b44c1dcf5f4655294f349c1df5bd40daa7c89[m
+Author: lirik1254 <kirill_shulzhik@mail.ru>
+Date:   Thu Sep 5 01:22:52 2024 +0500
+
+    feat: Added a dictionary of words and a method that selects a random word according to the selected difficulty and category
+
+[33mcommit c986bffb18b34e6d2032be59757b79129c68725a[m
+Author: github-classroom[bot] <66690702+github-classroom[bot]@users.noreply.github.com>
+Date:   Tue Sep 3 10:54:02 2024 +0000
+
+    Setting up GitHub Classroom Feedback
+
+[33mcommit 0d526231030d1a8921f0290b1237731d2ff9443d[m[33m ([m[1;31morigin/feedback[m[33m)[m
+Author: github-classroom[bot] <66690702+github-classroom[bot]@users.noreply.github.com>
+Date:   Tue Sep 3 10:54:02 2024 +0000
+
+    GitHub Classroom Feedback
+
+[33mcommit a54102062848da42e860b871ef271032d8f3c79e[m
+Author: ilyaryabikin <ilyaryabikin0708@gmail.com>
+Date:   Wed Aug 28 17:17:41 2024 +0300
+
+    Add more examples of project libraries usage
+
+[33mcommit f7d5ddab0e4ab920c1cf8e021c00c7db9887b7c6[m
+Author: ilyaryabikin <ilyaryabikin0708@gmail.com>
+Date:   Tue Aug 20 12:31:21 2024 +0300
+
+    Add README.md
+    
+    (cherry picked from commit 690c5c5bca58e6d7989214d53679b8772b6bfb8d)
+
+[33mcommit 50697886e0e9cc1c3c0a7231bf978adfd43a1ccc[m
+Author: Alexander Biryukov <sanya.rnd@gmail.com>
+Date:   Thu Aug 15 17:32:35 2024 +0300
+
+    init commit

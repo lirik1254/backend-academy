@@ -1,0 +1,58 @@
+@startuml
+package "Веб-система для популяризации олимпиадного программирования" {
+
+    [Веб-сервер] as web_server
+
+    node "Веб-приложение" {
+        component "Главная страница" as home
+        component "Статьи" as articles
+        component "Новости" as news
+        component "Статические страницы" as static_pages
+        component "Справочник" as handbook
+        component "Профили" as user_profiles
+        component "Аутентификация" as custom_auth
+        component "Интеграция с Codeforces" as codeforces
+    }
+
+    database "PostgreSQL" as postgres
+    database "Redis" as redis
+
+    ' Веб-сервер направляет запросы в Django
+    web_server --> home
+    web_server --> articles
+    web_server --> news
+    web_server --> static_pages
+    web_server --> handbook
+    web_server --> user_profiles
+    web_server --> custom_auth
+    web_server --> codeforces
+
+    ' Прямые связи с PostgreSQL
+    home --> postgres
+    articles --> postgres
+    news --> postgres
+    static_pages --> postgres
+    handbook --> postgres
+    user_profiles --> postgres
+    custom_auth --> postgres
+    codeforces --> postgres
+
+    ' Связи с Redis
+    user_profiles --> redis
+    custom_auth --> redis
+    codeforces --> redis
+}
+
+' Внешняя система Codeforces API
+package "Внешние системы" {
+    [Codeforces] as codeforces_api
+    [Yandex smtp] as yandex_smtp
+    }
+}
+
+
+
+' Модуль интеграции делает GET-запросы
+codeforces --> codeforces_api : REST API
+custom_auth --> yandex_smtp : SMTP
+@enduml

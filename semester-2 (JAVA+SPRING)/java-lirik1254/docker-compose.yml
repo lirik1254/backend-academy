@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17
+    container_name: postgresLinkTracker
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: linkTrackerDB
+    ports:
+      - "5252:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  liquibase-migrations:
+    container_name: migrations
+    image: liquibase/liquibase:4.29
+    depends_on:
+      - db
+    command:
+      - --searchPath=/migrations
+      - --changelog-file=changelog-master.xml
+      - --driver=org.postgresql.Driver
+      - --url=jdbc:postgresql://db:5432/linkTrackerDB
+      - --username=postgres
+      - --password=postgres
+      - update
+    volumes:
+      - ./migrations:/migrations
+
+volumes:
+  postgres_data:

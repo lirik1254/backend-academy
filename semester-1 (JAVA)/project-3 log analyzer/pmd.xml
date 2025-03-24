@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="Project rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>Tweaked project rulesets</description>
+
+    <exclude-pattern>backend/academy/samples/.*</exclude-pattern>
+
+    <rule ref="category/java/codestyle.xml/TooManyStaticImports">
+        <properties>
+            <property name="maximumStaticImports" value="100"/>
+        </properties>
+    </rule>
+</ruleset>

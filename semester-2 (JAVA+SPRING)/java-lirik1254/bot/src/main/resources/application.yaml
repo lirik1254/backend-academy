@@ -1,0 +1,26 @@
+app:
+  telegram-token: ${TELEGRAM_TOKEN}
+  base-url: http://localhost:8081 # env variable
+
+spring:
+  application:
+    name: Bot
+  liquibase:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: 8080
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+logging:
+  structured:
+    format:
+      console: ecs

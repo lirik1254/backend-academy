@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+        see: https://find-sec-bugs.github.io/bugs.htm
+     -->
+    <Match>
+        <Or>
+            <Bug pattern="INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE"/>
+            <Bug pattern="URLCONNECTION_SSRF_FD"/>
+            <Bug pattern="PATH_TRAVERSAL_IN"/>
+            <Bug pattern="PREDICTABLE_RANDOM"/>
+        </Or>
+    </Match>
+    <Match>
+        <Source name="~.*\.kt" />
+        <Or>
+            <Bug pattern="SQL_INJECTION_VERTX"/>
+        </Or>
+    </Match>
+
+    <!--
+        see: https://spotbugs.readthedocs.io/en/stable/
+     -->
+    <Match>
+        <Or>
+            <Bug pattern="DM_DEFAULT_ENCODING"/>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+            <Bug pattern="DM_EXIT"/>
+        </Or>
+    </Match>
+    <!-- Kotlin edge cases -->
+    <Match>
+        <Source name="~.*\.kt" />
+        <Or>
+            <Bug pattern="BC_BAD_CAST_TO_ABSTRACT_COLLECTION"/>
+            <Bug pattern="BC_VACUOUS_INSTANCEOF"/>
+            <Bug pattern="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR"/>
+            <Bug pattern="DM_NEW_FOR_GETCLASS"/>
+            <Bug pattern="IC_INIT_CIRCULARITY"/>
+            <Bug pattern="MS_EXPOSE_REP"/>
+            <Bug pattern="NP_LOAD_OF_KNOWN_NULL_VALUE"/>
+            <Bug pattern="NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION"/>
+            <Bug pattern="NP_NONNULL_PARAM_VIOLATION"/>
+            <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
+            <Bug pattern="NP_NULL_ON_SOME_PATH"/>
+            <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+            <Bug pattern="NP_NULL_PARAM_DEREF"/>
+            <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"/>
+            <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+            <Bug pattern="REC_CATCH_EXCEPTION"/>
+            <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+            <Bug pattern="SA_FIELD_SELF_ASSIGNMENT"/>
+            <Bug pattern="SA_LOCAL_SELF_ASSIGNMENT"/>
+            <Bug pattern="SE_BAD_FIELD"/>
+            <Bug pattern="SE_BAD_FIELD_STORE"/>
+            <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
+            <Bug pattern="UC_USELESS_OBJECT"/>
+            <Bug pattern="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS"/>
+        </Or>
+    </Match>
+
+    <!-- JMH exclusions -->
+    <Match>
+        <Package name="~.*\.jmh_generated" />
+    </Match>
+</FindBugsFilter>

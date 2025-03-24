@@ -1,0 +1,40 @@
+app:
+  github-token: ${GITHUB_TOKEN} # env variable
+  stackoverflow:
+    key: ${SO_TOKEN_KEY}
+    access-token: ${SO_ACCESS_TOKEN}
+  base-url: http://localhost:8080
+  access-type: ORM
+  batch-size: 1000
+
+spring:
+  application:
+    name: Scrapper
+  liquibase:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5252/linkTrackerDB  # Укажи имя базы данных
+    username: postgres      # Имя пользователя для подключения
+    password: postgres                                  # Пароль для подключения
+    driver-class-name: org.postgresql.Driver                  # Класс драйвера PostgreSQL
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+#logging:
+#  structured:
+#    format:
+#      console: ecs
+
+server:
+  port: 8081
