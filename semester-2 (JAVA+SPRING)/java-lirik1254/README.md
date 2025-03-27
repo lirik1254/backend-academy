@@ -51,3 +51,7 @@ SO_TOKEN_KEY - ключ stackoverflow api для доступа к api stackover
 SO_ACCESS_TOKEN - токен stackoverflow api для доступа к api stackoverflow
 
 TELEGRAM_TOKEN - токен телеграм бота
+
+DB_USERNAME - пользователь БД (произвольное значение)
+
+DB_PASSWORD - пароль от БД (произвольное значение)
