@@ -1,18 +1,16 @@
-package backend.academy.scrapper.link;
+package backend.academy.scrapper.registration;
 
-import static backend.academy.scrapper.utils.ExceptionMessages.LINK_NOT_FOUND;
 import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import backend.academy.scrapper.TestConfig;
 import backend.academy.scrapper.clients.GitHubInfoClient;
+import backend.academy.scrapper.clients.StackOverflowClient;
 import backend.academy.scrapper.dbInitializeBase;
 import dto.AddLinkDTO;
-import dto.RemoveLinkRequest;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -30,9 +28,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestConfig.class)
-public class DeleteLinkTestsBase extends dbInitializeBase {
+public class DeleteUserTestsBase extends dbInitializeBase {
     @MockitoBean
     protected GitHubInfoClient gitHubInfoClient;
+
+    @MockitoBean
+    protected StackOverflowClient stackOverflowClient;
 
     @BeforeEach
     public void clearDatabase() {
@@ -60,7 +61,6 @@ public class DeleteLinkTestsBase extends dbInitializeBase {
                         .header("Tg-Chat-Id", chatId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.url").value(expectedUrl))
@@ -68,36 +68,19 @@ public class DeleteLinkTestsBase extends dbInitializeBase {
                 .andExpect(jsonPath("$.filters", hasItems(expectedFilters.toArray())));
     }
 
-    protected void performDeleteLinkRequest(
-            RemoveLinkRequest request,
-            Long chatId,
-            String expectedUrl,
-            List<String> expectedTags,
-            List<String> expectedFilters)
-            throws Exception {
-        mockMvc.perform(delete("/links")
-                        .header("Tg-Chat-Id", chatId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", Matchers.any(int.class)))
-                .andExpect(jsonPath("$.url").value(expectedUrl))
-                .andExpect(jsonPath("$.tags", hasItems(expectedTags.toArray())))
-                .andExpect(jsonPath("$.filters", hasItems(expectedFilters.toArray())));
+    protected void performDeleteUserRequest(Long chatId) throws Exception {
+        mockMvc.perform(delete("/tg-chat/" + chatId).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
-    protected void performDeleteLinkRequestNotFound(RemoveLinkRequest request, Long chatId) throws Exception {
-        mockMvc.perform(delete("/links")
-                        .header("Tg-Chat-Id", chatId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+    protected void performDeleteUserRequestNotFound(Long chatId) throws Exception {
+        mockMvc.perform(delete("/tg-chat/" + chatId).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.description").value(LINK_NOT_FOUND))
+                .andExpect(jsonPath("$.description").value("Чат не существует"))
                 .andExpect(jsonPath("$.code").value("404"))
                 .andExpect(
-                        jsonPath("$.exceptionName").value("backend.academy.scrapper.exceptions.LinkNotFoundException"))
-                .andExpect(jsonPath("$.exceptionMessage").value(LINK_NOT_FOUND))
+                        jsonPath("$.exceptionName").value("backend.academy.scrapper.exceptions.ChatNotFoundException"))
+                .andExpect(jsonPath("$.exceptionMessage").value("Чат не существует"))
                 .andExpect(jsonPath("$.stacktrace").exists());
     }
 }

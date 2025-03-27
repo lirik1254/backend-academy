@@ -71,17 +71,16 @@ public class ScheduledTests extends dbInitializeBase {
     String firstUserGithubLink = "https://github.com/lirik1254/abTestRepo";
     String secondUserGithubLink = "https://github.com/anotherAuthor/anotherLink";
     ContentDTO firstRequestNewContent = new ContentDTO(UpdateType.ISSUE, "title", "lirik1254", "2020-10-10", "issue");
-    ContentDTO secondRequestNewContent =
-            new ContentDTO(UpdateType.COMMENT, "title", "lirik1254", "2019-08-10", "comment");
+    ContentDTO secondRequestNewContent = new ContentDTO(UpdateType.PR, "title", "lirik1254", "2019-08-10", "comment");
 
     @BeforeEach
     public void clearDatabaseAndFill() throws Exception {
         try (Connection conn =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP SCHEMA public CASCADE");
-                stmt.execute("CREATE SCHEMA public");
-                stmt.execute("GRANT ALL ON SCHEMA public TO public");
+                stmt.execute("DROP SCHEMA scrapper CASCADE");
+                stmt.execute("CREATE SCHEMA scrapper");
+                stmt.execute("GRANT ALL ON SCHEMA scrapper TO public");
             }
 
             runMigrations(conn);

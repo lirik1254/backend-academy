@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LinkFilters {
-    private long linkId;
-    private String filters;
+    private Long userId;
+    private Long urlId;
+    private String filter;
 }

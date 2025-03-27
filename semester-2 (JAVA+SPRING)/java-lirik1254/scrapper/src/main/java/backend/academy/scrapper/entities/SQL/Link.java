@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Link {
-    private long linkId;
-    private long usersId;
-    private long urlId;
+    private Long userId;
+    private Long urlId;
 }

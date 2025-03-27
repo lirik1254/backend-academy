@@ -24,14 +24,13 @@ import lombok.Setter;
 public class Url {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "url_id")
-    private Long urlId;
-
-    @Enumerated(EnumType.STRING)
-    private LinkType linkType;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String url;
+
+    @Enumerated(EnumType.STRING)
+    private LinkType linkType;
 
     @OneToMany(mappedBy = "url", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Content> contents = new ArrayList<>();
@@ -44,13 +43,18 @@ public class Url {
         link.url(this);
     }
 
+    public void removeLink(Link link) {
+        links.remove(link);
+        link.url(null);
+    }
+
     public void addContent(Content content) {
         contents.add(content);
         content.url(this);
     }
 
-    public void deleteContent() {
-        contents.forEach(content -> content.url(null));
-        this.contents.clear();
+    public void removeContent() {
+        contents.forEach(content -> content.setUrl(null));
+        contents.clear();
     }
 }

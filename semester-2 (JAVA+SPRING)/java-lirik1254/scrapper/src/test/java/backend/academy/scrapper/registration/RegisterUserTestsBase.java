@@ -26,9 +26,8 @@ public class RegisterUserTestsBase extends dbInitializeBase {
         try (Connection conn =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP SCHEMA public CASCADE");
-                stmt.execute("CREATE SCHEMA public");
-                stmt.execute("GRANT ALL ON SCHEMA public TO public");
+                stmt.execute("DROP SCHEMA scrapper CASCADE");
+                stmt.execute("CREATE SCHEMA scrapper");
             }
 
             runMigrations(conn);

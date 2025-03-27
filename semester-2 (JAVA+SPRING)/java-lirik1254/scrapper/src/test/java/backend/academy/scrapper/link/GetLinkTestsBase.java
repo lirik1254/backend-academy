@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -53,9 +54,8 @@ public class GetLinkTestsBase extends dbInitializeBase {
         try (Connection conn =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP SCHEMA public CASCADE");
-                stmt.execute("CREATE SCHEMA public");
-                stmt.execute("GRANT ALL ON SCHEMA public TO public");
+                stmt.execute("DROP SCHEMA scrapper CASCADE");
+                stmt.execute("CREATE SCHEMA scrapper");
             }
 
             runMigrations(conn);
@@ -83,7 +83,7 @@ public class GetLinkTestsBase extends dbInitializeBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.links").isArray())
                 .andExpect(jsonPath("$.size").value(1))
-                .andExpect(jsonPath("$.links[0].id").value(1))
+                .andExpect(jsonPath("$.links[0].id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.links[0].url").value("https://github.com/lirik1254/abTestRepo"))
                 .andExpect(jsonPath("$.links[0].tags").isArray())
                 .andExpect(jsonPath("$.links[0].tags[0]").value("tag1"))

@@ -10,22 +10,31 @@ import dto.ContentDTO;
 import dto.UpdateType;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class GitHubInfoClient {
     private final ScrapperConfig scrapperConfig;
     private final ConvertLinkToApiUtils convertLinkToApiUtils;
     private final ObjectMapper objectMapper;
+    private final RestClient restClient;
 
-    RestClient restClient = RestClient.create();
+    public GitHubInfoClient(
+            ScrapperConfig scrapperConfig,
+            ConvertLinkToApiUtils convertLinkToApiUtils,
+            ObjectMapper objectMapper,
+            @Qualifier("default") RestClient restClient) {
+        this.scrapperConfig = scrapperConfig;
+        this.convertLinkToApiUtils = convertLinkToApiUtils;
+        this.objectMapper = objectMapper;
+        this.restClient = restClient;
+    }
 
     public List<ContentDTO> getGithubContent(String link)
             throws RepositoryNotFoundException, HttpMessageNotReadableException {

@@ -62,7 +62,7 @@ public class UpdateSendTests {
         String retAnswer =
                 """
             Пришло уведомление по url https://github.com/lirik1254/abTestRepo
-            Тип: Issue
+            Тип: ISSUE
             Текст темы: Заголовок иссуе
             Имя пользователя: lirik1254
             Время создания: 2025-03-13T15:27:50Z
@@ -94,7 +94,7 @@ public class UpdateSendTests {
         String retAnswer =
                 """
             Пришло уведомление по url https://github.com/lirik1254/abTestRepo
-            Тип: Issue
+            Тип: ISSUE
             Текст темы: Заголовок иссуе
             Имя пользователя: lirik1254
             Время создания: 2025-03-15T18:28:34

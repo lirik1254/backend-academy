@@ -2,13 +2,18 @@ package backend.academy.scrapper.utils.ORM;
 
 import backend.academy.scrapper.clients.UpdateLinkClient;
 import backend.academy.scrapper.entities.JPA.Content;
+import backend.academy.scrapper.entities.JPA.GithubContent;
 import backend.academy.scrapper.entities.JPA.Link;
+import backend.academy.scrapper.entities.JPA.StackOverflowContent;
 import backend.academy.scrapper.entities.JPA.Url;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
+import backend.academy.scrapper.utils.LinkType;
 import dto.ContentDTO;
+import dto.UpdateType;
+import general.RegexCheck;
 import jakarta.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,27 +26,35 @@ import org.springframework.stereotype.Component;
 public class ContentUtilsORM {
     private final UpdateLinkClient updateLinkClient;
     private final UrlRepositoryORM urlRepositoryORM;
+    private final RegexCheck regexCheck;
 
     public List<ContentDTO> fromContentListToContentDTOList(List<Content> contents) {
-        List<ContentDTO> contentDTOS = new ArrayList<>();
+        return contents.stream()
+                .map(content -> {
+                    UpdateType updateType = null;
+                    if (content instanceof GithubContent) {
+                        updateType = ((GithubContent) content).updatedType();
+                    } else if (content instanceof StackOverflowContent) {
+                        updateType = ((StackOverflowContent) content).updatedType();
+                    }
 
-        contents.forEach(content -> {
-            contentDTOS.add(new ContentDTO(
-                    content.updatedType(),
-                    content.title(),
-                    content.userName(),
-                    content.creationTime(),
-                    content.answer()));
-        });
-
-        return contentDTOS;
+                    return new ContentDTO(
+                            updateType, content.title(), content.userName(), content.creationTime(), content.answer());
+                })
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public void updateContentAndSend(Link link, List<ContentDTO> newContent, List<ContentDTO> newItems) {
+        LinkType linkType;
+        if (regexCheck.isGithub(link.url().url())) {
+            linkType = LinkType.GITHUB;
+        } else {
+            linkType = LinkType.STACKOVERFLOW;
+        }
         Url url = urlRepositoryORM.getUrlByUrl(link.url().url());
         if (!newItems.isEmpty()) {
-            url.deleteContent();
+            url.removeContent();
             urlRepositoryORM.save(url);
             newContent.forEach(content -> {
                 log.atInfo()
@@ -49,20 +62,14 @@ public class ContentUtilsORM {
                         .addKeyValue("access-type", "ORM")
                         .setMessage("Добавление контента в URL")
                         .log();
-                Content addContent = new Content();
-                addContent.updatedType(content.type());
-                addContent.title(content.title());
-                addContent.userName(content.userName());
-                addContent.answer(content.answer());
-                addContent.creationTime(content.creationTime());
-                url.addContent(addContent);
+                Content.createFromDTO(linkType, content, url);
             });
         }
 
         urlRepositoryORM.save(url);
 
         newItems.forEach(content -> {
-            Long chatId = link.users().chatId();
+            Long chatId = link.id().userId();
             String sendUrl = link.url().url();
             log.atInfo()
                     .addKeyValue("chatId", chatId)

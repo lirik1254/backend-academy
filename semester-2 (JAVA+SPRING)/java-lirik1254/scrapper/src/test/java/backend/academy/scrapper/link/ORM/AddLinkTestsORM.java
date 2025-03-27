@@ -2,14 +2,17 @@ package backend.academy.scrapper.link.ORM;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import backend.academy.scrapper.entities.JPA.Content;
+import backend.academy.scrapper.entities.JPA.GithubContent;
 import backend.academy.scrapper.entities.JPA.Link;
+import backend.academy.scrapper.entities.JPA.StackOverflowContent;
 import backend.academy.scrapper.entities.JPA.Url;
-import backend.academy.scrapper.entities.JPA.Users;
+import backend.academy.scrapper.entities.JPA.User;
 import backend.academy.scrapper.link.AddLinkTestsBase;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UsersRepositoryORM;
@@ -18,6 +21,7 @@ import dto.AddLinkDTO;
 import dto.ContentDTO;
 import dto.UpdateType;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,10 +63,10 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
 
         performAddLinkRequest(request, 123L, githubLink, tags, filters);
 
-        List<Users> users = usersRepositoryORM.findAll();
+        List<User> users = usersRepositoryORM.findAll();
         assertEquals(1, users.size());
 
-        Users user = users.getFirst();
+        User user = users.getFirst();
         assertEquals(123, user.chatId());
         assertEquals(1, user.links().size());
 
@@ -81,8 +85,11 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
         assertEquals(contentTitle, content.title());
         assertEquals(contentAnswer, content.answer());
         assertEquals(contentCreationTime, content.creationTime());
-        assertEquals(contentUpdateType, content.updatedType());
         assertEquals(contentUserName, content.userName());
+
+        assertInstanceOf(GithubContent.class, content, "Content должен быть экземпляром GithubContent");
+        GithubContent githubContent = (GithubContent) content;
+        assertEquals(contentUpdateType, githubContent.updatedType());
     }
 
     @Test
@@ -106,10 +113,10 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
 
         performAddLinkRequest(request, 123L, stackOverflowLink, tags, filters);
 
-        List<Users> users = usersRepositoryORM.findAll();
+        List<User> users = usersRepositoryORM.findAll();
         assertEquals(1, users.size());
 
-        Users user = users.getFirst();
+        User user = users.getFirst();
         assertEquals(123, user.chatId());
         assertEquals(1, user.links().size());
 
@@ -128,8 +135,11 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
         assertEquals(contentTitle, content.title());
         assertEquals(contentAnswer, content.answer());
         assertEquals(contentCreationTime, content.creationTime());
-        assertEquals(contentUpdateType, content.updatedType());
         assertEquals(contentUserName, content.userName());
+
+        assertInstanceOf(StackOverflowContent.class, content, "Content должен быть экземпляром StackOverflowContent");
+        StackOverflowContent stackOverflowContent = (StackOverflowContent) content;
+        assertEquals(contentUpdateType, stackOverflowContent.updatedType());
     }
 
     @Test
@@ -164,7 +174,7 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changeTagRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.url").value(request.link()))
                 .andExpect(jsonPath("$.tags", hasItems("52")))
                 .andExpect(jsonPath("$.filters", hasItems("filter1")));

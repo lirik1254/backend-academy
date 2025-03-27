@@ -5,8 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Url {
-    private Long id;
-    private String url;
-    private String linkType;
+public class User {
+    private Long chatId;
 }

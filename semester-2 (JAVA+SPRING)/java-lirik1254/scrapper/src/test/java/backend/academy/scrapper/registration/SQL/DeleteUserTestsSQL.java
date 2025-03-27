@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import backend.academy.scrapper.registration.DeleteUsersTestsBase;
+import backend.academy.scrapper.registration.DeleteUserTestsBase;
 import backend.academy.scrapper.repositories.SQL.ContentRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.FilterRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.LinkRepositorySQL;
@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-public class DeleteUserTestsSQL extends DeleteUsersTestsBase {
+public class DeleteUserTestsSQL extends DeleteUserTestsBase {
 
     @Autowired
     public UsersRepositorySQL usersRepositorySQL;
@@ -74,16 +74,16 @@ public class DeleteUserTestsSQL extends DeleteUsersTestsBase {
         assertFalse(urlRepositorySQL.findAllWithPagination(0, 10).get().toList().isEmpty());
         assertFalse(contentRepositorySQL.findAll().isEmpty());
         assertFalse(filterRepositorySQL.findAll().isEmpty());
-        assertFalse(tagRepositorySQL.getAllTagsByChatId(123L).isEmpty());
+        assertFalse(tagRepositorySQL.getAllTagsByUserId(123L).isEmpty());
 
         performDeleteUserRequest(123L);
 
-        assertNull(usersRepositorySQL.getByUsersId(123L));
+        assertNull(usersRepositorySQL.getByChatId(123L));
         assertTrue(linkRepositorySQL.findAll().isEmpty());
         assertTrue(urlRepositorySQL.findAllWithPagination(0, 10).get().toList().isEmpty());
         assertTrue(contentRepositorySQL.findAll().isEmpty());
         assertTrue(filterRepositorySQL.findAll().isEmpty());
-        assertTrue(tagRepositorySQL.getAllTagsByChatId(123L).isEmpty());
+        assertTrue(tagRepositorySQL.getAllTagsByUserId(123L).isEmpty());
     }
 
     @Test

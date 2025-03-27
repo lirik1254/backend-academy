@@ -1,11 +1,11 @@
 package backend.academy.scrapper.clients;
 
-import backend.academy.scrapper.ScrapperConfig;
 import dto.ApiErrorResponseDTO;
 import dto.ContentDTO;
 import dto.UpdateDTO;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import reactor.core.publisher.Mono;
@@ -13,12 +13,10 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 public class UpdateLinkClient {
-    private final ScrapperConfig scrapperConfig;
-    RestClient restClient;
+    private final RestClient restClient;
 
-    public UpdateLinkClient(ScrapperConfig scrapperConfig) {
-        this.scrapperConfig = scrapperConfig;
-        restClient = RestClient.create(scrapperConfig.baseUrl());
+    public UpdateLinkClient(@Qualifier("baseUrl") RestClient restClient) {
+        this.restClient = restClient;
     }
 
     public void sendUpdate(Long chatId, String link, ContentDTO contentDTO) {

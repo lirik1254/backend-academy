@@ -4,12 +4,14 @@ import backend.academy.scrapper.clients.UpdateLinkClient;
 import backend.academy.scrapper.entities.SQL.Content;
 import backend.academy.scrapper.entities.SQL.Link;
 import backend.academy.scrapper.entities.SQL.Url;
-import backend.academy.scrapper.entities.SQL.Users;
+import backend.academy.scrapper.entities.SQL.User;
 import backend.academy.scrapper.repositories.SQL.ContentRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.UrlRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.UsersRepositorySQL;
+import backend.academy.scrapper.utils.LinkType;
 import dto.ContentDTO;
 import dto.UpdateType;
+import general.RegexCheck;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class ContentUtilsSQL {
     private final UrlRepositorySQL urlRepositorySQL;
     private final ContentRepositorySQL contentRepositorySQL;
     private final UsersRepositorySQL usersRepositorySQL;
+    private final RegexCheck regexCheck;
 
     public List<ContentDTO> fromContentListToContentDTOList(List<Content> contents) {
         List<ContentDTO> contentDTOS = new ArrayList<>();
@@ -39,15 +42,20 @@ public class ContentUtilsSQL {
                     content.creationTime(),
                     content.answer()));
         });
-
         return contentDTOS;
     }
 
     @Transactional
     public void updateContentAndSend(Link link, List<ContentDTO> newContent, List<ContentDTO> newItems) {
+        LinkType linkType;
+        if (regexCheck.isGithub(urlRepositorySQL.getByUrlId(link.urlId()).url())) {
+            linkType = LinkType.GITHUB;
+        } else {
+            linkType = LinkType.STACKOVERFLOW;
+        }
         Url url = urlRepositorySQL.getByUrlId(link.urlId());
         if (!newItems.isEmpty()) {
-            contentRepositorySQL.deleteContentByUrlId(url.urlId());
+            contentRepositorySQL.deleteContentByUrlId(url.id());
             newContent.forEach(content -> {
                 log.atInfo()
                         .addKeyValue("url", url.url())
@@ -55,19 +63,20 @@ public class ContentUtilsSQL {
                         .setMessage("Добавление контента в URL")
                         .log();
                 contentRepositorySQL.addContent(
+                        linkType,
                         content.type().name(),
                         content.answer(),
                         content.creationTime(),
                         content.title(),
                         content.userName(),
-                        url.urlId());
+                        url.id());
             });
         }
 
-        Users users = usersRepositorySQL.getByUsersId(link.usersId());
+        User user = usersRepositorySQL.getByChatId(link.userId());
 
         newItems.forEach(content -> {
-            Long chatId = users.chatId();
+            Long chatId = user.chatId();
             String sendUrl = url.url();
             log.atInfo()
                     .addKeyValue("chatId", chatId)

@@ -23,7 +23,7 @@ public class UrlRepositorySQL {
 
     public boolean existUrlByUrl(String url) {
         String existSql = """
-            select * from url where url = (:url)""";
+            select * from scrapper.url where url = (:url)""";
 
         SqlParameterSource parameterSource = new MapSqlParameterSource("url", url);
 
@@ -37,7 +37,7 @@ public class UrlRepositorySQL {
 
     public Url getByUrl(String url) {
         String returnUrl = """
-            select * from url where url = (:url)""";
+            select * from scrapper.url where url = (:url)""";
 
         SqlParameterSource parameterSource = new MapSqlParameterSource("url", url);
 
@@ -50,7 +50,7 @@ public class UrlRepositorySQL {
 
     public void createUrl(String url, String linkType) {
         String createUrl = """
-            insert into url (url, link_type) values (:url, :linkType)""";
+            insert into scrapper.url (url, link_type) values (:url, :linkType)""";
 
         SqlParameterSource parameterSource =
                 new MapSqlParameterSource().addValue("url", url).addValue("linkType", linkType);
@@ -61,10 +61,10 @@ public class UrlRepositorySQL {
     public void checkDeleteUrl(String url) {
         String deleteUrl =
                 """
-            delete from url
+            delete from scrapper.url
             where url = :url
-            and not exists (select * from link where link.url_id = (
-            select url_id from url where url = :url
+            and not exists (select * from scrapper.link where link.url_id = (
+            select id from scrapper.url where url = :url
             ))""";
 
         SqlParameterSource parameterSource = new MapSqlParameterSource().addValue("url", url);
@@ -74,8 +74,8 @@ public class UrlRepositorySQL {
 
     public Url getByUrlId(Long urlId) {
         String getByUrlIdSql = """
-            select * from url
-            where url_id = :urlId""";
+            select * from scrapper.url
+            where id = :urlId""";
 
         SqlParameterSource parameterSource = new MapSqlParameterSource("urlId", urlId);
 
@@ -85,12 +85,12 @@ public class UrlRepositorySQL {
     public Page<Url> findAllWithPagination(int pageNumber, int pageSize) {
         String sql =
                 """
-        SELECT * FROM url
-        ORDER BY url_id
+        SELECT * FROM scrapper.url
+        ORDER BY id
         LIMIT :pageSize OFFSET :offset
     """;
 
-        String countSql = "SELECT COUNT(*) FROM url";
+        String countSql = "SELECT COUNT(*) FROM scrapper.url";
 
         int offset = pageNumber * pageSize;
 

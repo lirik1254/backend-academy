@@ -17,9 +17,9 @@ public class TagsClient {
     private final RestClient restClient;
     private final BotConfig botConfig;
 
-    public TagsClient(BotConfig botConfig) {
+    public TagsClient(BotConfig botConfig, RestClient restClient) {
         this.botConfig = botConfig;
-        this.restClient = RestClient.create(botConfig.baseUrl());
+        this.restClient = restClient;
     }
 
     public String getAllTags(Long chatId) {

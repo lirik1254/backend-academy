@@ -17,52 +17,56 @@ public class TagRepositorySQL {
     private final NamedParameterJdbcTemplate template;
     private final LinkTagsRowMapper linkTagsRowMapper;
 
-    public void addTag(Long linkId, String tag) {
-        String addSql = """
-            insert into link_tags (link_id, tags) values ((:link_id), (:tag))""";
+    public void addTag(Long userId, Long urlId, String tag) {
+        String addSql =
+                """
+            insert into scrapper.link_tags(user_id, url_id, tag) values (:userId, :urlId, :tag)""";
+
+        SqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("urlId", urlId)
+                .addValue("tag", tag);
+
+        template.update(addSql, parameterSource);
+    }
+
+    public void deleteTags(Long userId, Long urlId) {
+        String addSql =
+                """
+            delete from scrapper.link_tags
+            where user_id = :userId and url_id = :urlId""";
 
         SqlParameterSource parameterSource =
-                new MapSqlParameterSource().addValue("link_id", linkId).addValue("tag", tag);
+                new MapSqlParameterSource().addValue("userId", userId).addValue("urlId", urlId);
 
         template.update(addSql, parameterSource);
     }
 
-    public void deleteTags(Long linkId) {
-        String addSql = """
-            delete from link_tags
-            where link_id = (:linkId)""";
+    public List<LinkTags> getTagsByUrlIdAndUserId(Long urlId, Long userId) {
+        String getTags =
+                """
+            select * from scrapper.link_tags where user_id = :userId
+            and url_id = :urlId""";
 
-        SqlParameterSource parameterSource = new MapSqlParameterSource().addValue("linkId", linkId);
-
-        template.update(addSql, parameterSource);
-    }
-
-    public List<LinkTags> getTagsByLinkId(Long linkId) {
-        String getTags = """
-            select * from link_tags where link_id = :linkId""";
-
-        SqlParameterSource parameterSource = new MapSqlParameterSource().addValue("linkId", linkId);
+        SqlParameterSource parameterSource =
+                new MapSqlParameterSource().addValue("urlId", urlId).addValue("userId", userId);
 
         return template.query(getTags, parameterSource, linkTagsRowMapper);
     }
 
-    public List<String> getAllTagsByChatId(Long chatId) {
-        String allTagsSql =
-                """
-            select distinct tags from link_tags where link_id in
-            (select link_id from link where users_id = (
-            select users_id from users where chat_id = :chatId
-            ))""";
+    public List<String> getAllTagsByUserId(Long userId) {
+        String allTagsSql = """
+            select distinct tag from scrapper.link_tags where user_id = :userId""";
 
-        SqlParameterSource parameterSource = new MapSqlParameterSource("chatId", chatId);
+        SqlParameterSource parameterSource = new MapSqlParameterSource("userId", userId);
 
         return template.queryForList(allTagsSql, parameterSource, String.class);
     }
 
     public List<String> findAll() {
-        String findAllSql = "select * from link_tags";
+        String findAllSql = "select * from scrapper.link_tags";
         return template.query(findAllSql, linkTagsRowMapper).stream()
-                .map(LinkTags::text)
+                .map(LinkTags::tag)
                 .toList();
     }
 }

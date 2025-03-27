@@ -11,11 +11,11 @@ public class ContentRowMapper implements RowMapper<Content> {
     @Override
     public Content mapRow(ResultSet rs, int rowNum) throws SQLException {
         Content content = new Content();
-        content.contentId(rs.getLong("content_id"));
+        content.id(rs.getLong("id"));
+        content.updatedType(rs.getString("updated_type"));
         content.title(rs.getString("title"));
         content.answer(rs.getString("answer"));
         content.creationTime(rs.getString("creation_time"));
-        content.updatedType(rs.getString("updated_type"));
         content.urlId(rs.getLong("url_id"));
         content.userName(rs.getString("user_name"));
 

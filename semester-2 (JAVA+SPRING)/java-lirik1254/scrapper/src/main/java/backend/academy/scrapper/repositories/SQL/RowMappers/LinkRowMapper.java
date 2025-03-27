@@ -13,8 +13,7 @@ public class LinkRowMapper implements RowMapper<Link> {
     @Override
     public Link mapRow(ResultSet rs, int rowNum) throws SQLException {
         Link link = new Link();
-        link.linkId(rs.getLong("link_id"));
-        link.usersId(rs.getLong("users_id")); // Убедись, что в классе `Link` есть это поле
+        link.userId(rs.getLong("user_id"));
         link.urlId(rs.getLong("url_id"));
         return link;
     }

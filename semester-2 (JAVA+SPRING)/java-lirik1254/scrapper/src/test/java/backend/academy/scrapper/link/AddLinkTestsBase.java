@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,9 +40,8 @@ public class AddLinkTestsBase extends dbInitializeBase {
         try (Connection conn =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP SCHEMA public CASCADE");
-                stmt.execute("CREATE SCHEMA public");
-                stmt.execute("GRANT ALL ON SCHEMA public TO public");
+                stmt.execute("DROP SCHEMA scrapper CASCADE");
+                stmt.execute("CREATE SCHEMA scrapper");
             }
 
             runMigrations(conn);
@@ -63,7 +63,7 @@ public class AddLinkTestsBase extends dbInitializeBase {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.url").value(expectedUrl))
                 .andExpect(jsonPath("$.tags", hasItems(expectedTags.toArray())))
                 .andExpect(jsonPath("$.filters", hasItems(expectedFilters.toArray())));

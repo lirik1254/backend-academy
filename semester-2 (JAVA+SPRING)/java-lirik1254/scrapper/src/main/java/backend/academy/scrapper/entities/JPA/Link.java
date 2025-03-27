@@ -3,72 +3,81 @@ package backend.academy.scrapper.entities.JPA;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "link")
-@Setter
+@Table(name = "link", schema = "scrapper")
 @Getter
+@Setter
 public class Link {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long linkId;
+    @EmbeddedId
+    private LinkId id;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "link_tags", joinColumns = @JoinColumn(name = "link_id"))
-    @Column(name = "tags")
-    private List<String> tags;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "link_filters", joinColumns = @JoinColumn(name = "link_id"))
-    @Column(name = "filters")
-    private List<String> filters;
-
+    @MapsId("userId")
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "url_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "chat_id")
+    private User user;
+
+    @MapsId("urlId")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "url_id", referencedColumnName = "id")
     private Url url;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "users_id")
-    private Users users;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "link_tags",
+            schema = "scrapper",
+            joinColumns = {
+                @JoinColumn(name = "user_id", referencedColumnName = "user_id"),
+                @JoinColumn(name = "url_id", referencedColumnName = "url_id")
+            })
+    @Column(name = "tag")
+    private List<String> tags = new ArrayList<>();
 
-    //    public void addContent(Content content) {
-    //        this.content.add(content);
-    //        content.link(this);
-    //    }
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "link_filters",
+            schema = "scrapper",
+            joinColumns = {
+                @JoinColumn(name = "user_id", referencedColumnName = "user_id"),
+                @JoinColumn(name = "url_id", referencedColumnName = "url_id")
+            })
+    @Column(name = "filter")
+    private List<String> filters = new ArrayList<>();
+
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null && !user.links().contains(this)) {
+            user.addLink(this);
+        }
+    }
+
+    public void setUrl(Url url) {
+        this.url = url;
+        if (url != null && !url.links().contains(this)) {
+            url.addLink(this);
+        }
+    }
+
     public void deleteLink() {
         if (url != null) {
             url.links().remove(this);
             url = null;
         }
 
-        // Удаляем связь с пользователем
-        if (users != null) {
-            users.links().remove(this);
-            users = null;
+        if (user != null) {
+            user.links().remove(this);
+            user = null;
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Link link = (Link) o;
-        return linkId != null && linkId.equals(link.linkId);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 }

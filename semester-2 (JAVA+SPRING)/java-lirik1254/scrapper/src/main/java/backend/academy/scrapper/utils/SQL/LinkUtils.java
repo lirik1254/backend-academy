@@ -27,16 +27,16 @@ public class LinkUtils {
         List<LinkResponseDTO> linkResponseDTOS = new ArrayList<>();
 
         userLinks.forEach(link -> {
-            long linkId = link.linkId();
-
+            Long urlId = link.urlId();
+            Long userId = link.userId();
             linkResponseDTOS.add(new LinkResponseDTO(
-                    Math.toIntExact(linkId),
+                    Math.toIntExact(link.hashCode()),
                     urlRepositorySQL.getByUrlId(link.urlId()).url(),
-                    tagRepositorySQL.getTagsByLinkId(linkId).stream()
-                            .map(LinkTags::text)
+                    tagRepositorySQL.getTagsByUrlIdAndUserId(urlId, userId).stream()
+                            .map(LinkTags::tag)
                             .toList(),
-                    filterRepositorySQL.getFiltersByLinkId(linkId).stream()
-                            .map(LinkFilters::filters)
+                    filterRepositorySQL.getFiltersByUserIdAndUrlId(urlId, userId).stream()
+                            .map(LinkFilters::filter)
                             .toList()));
         });
 

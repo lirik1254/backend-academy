@@ -4,7 +4,7 @@ app:
     key: ${SO_TOKEN_KEY}
     access-token: ${SO_ACCESS_TOKEN}
   base-url: http://localhost:8080
-  access-type: ORM
+  access-type: SQL
   batch-size: 1000
 
 spring:
@@ -13,9 +13,9 @@ spring:
   liquibase:
     enabled: false
   datasource:
-    url: jdbc:postgresql://localhost:5252/linkTrackerDB  # Укажи имя базы данных
-    username: postgres      # Имя пользователя для подключения
-    password: postgres                                  # Пароль для подключения
+    url: jdbc:postgresql://localhost:5432/linkTrackerDB  # Укажи имя базы данных
+    username: ${DB_USERNAME}     # Имя пользователя для подключения
+    password: ${DB_PASSWORD}                                  # Пароль для подключения
     driver-class-name: org.postgresql.Driver                  # Класс драйвера PostgreSQL
   jpa:
     hibernate:
@@ -25,6 +25,7 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+        default_schema: scrapper
 
 springdoc:
   swagger-ui:

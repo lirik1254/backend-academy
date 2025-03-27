@@ -8,9 +8,6 @@ import backend.academy.bot.utils.UpdateServiceUtils;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
 import dto.ContentDTO;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,5 +51,4 @@ public class UpdateService {
             throw new RuntimeException("Некорректные параметры запроса");
         }
     }
-
 }

@@ -11,6 +11,7 @@ import dto.UpdateType;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -19,10 +20,9 @@ import org.springframework.web.client.RestClientResponseException;
 @Component
 @Slf4j
 public class StackOverflowClient {
-    private final ScrapperConfig scrapperConfig;
     private final ConvertLinkToApiUtils convertLinkToApiUtils;
     private final ObjectMapper objectMapper;
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
     private final String key;
     private final String access_token;
@@ -32,14 +32,17 @@ public class StackOverflowClient {
     private static final String REQUEST_ERROR = "Ошибка при запросе";
 
     public StackOverflowClient(
-            ScrapperConfig scrapperConfig, ConvertLinkToApiUtils convertLinkToApiUtils, ObjectMapper objectMapper) {
-        this.scrapperConfig = scrapperConfig;
+            ScrapperConfig scrapperConfig,
+            ConvertLinkToApiUtils convertLinkToApiUtils,
+            ObjectMapper objectMapper,
+            @Qualifier("default") RestClient restClient) {
         this.convertLinkToApiUtils = convertLinkToApiUtils;
         this.objectMapper = objectMapper;
 
         this.key = scrapperConfig.stackOverflow().key();
         this.access_token = scrapperConfig.stackOverflow().accessToken();
         this.filter = "withbody";
+        this.restClient = restClient;
     }
 
     private String performRequest(String url) {

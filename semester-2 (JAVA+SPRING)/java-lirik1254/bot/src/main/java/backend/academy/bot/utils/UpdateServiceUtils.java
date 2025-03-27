@@ -1,15 +1,15 @@
 package backend.academy.bot.utils;
 
-import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import org.springframework.stereotype.Component;
 
 @Component
 public class UpdateServiceUtils {
     public String toDate(Integer creationDate) {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(creationDate), ZoneId.systemDefault())
-            .toString();
+                .toString();
     }
 
     public boolean isInteger(String time) {

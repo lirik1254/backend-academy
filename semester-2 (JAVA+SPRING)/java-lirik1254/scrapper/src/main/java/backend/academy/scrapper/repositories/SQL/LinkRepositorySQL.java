@@ -21,10 +21,10 @@ public class LinkRepositorySQL {
     public List<Link> getUserLinks(Long chatId) {
         String getLinksQuery =
                 """
-            select * from link
-            where users_id = (select users_id from users where chat_id = (:chat_id))""";
+            select * from scrapper.link
+            where user_id = (select chat_id from scrapper.user where chat_id = (:chatId))""";
 
-        SqlParameterSource parameterSource = new MapSqlParameterSource("chat_id", chatId);
+        SqlParameterSource parameterSource = new MapSqlParameterSource("chatId", chatId);
 
         try {
             return template.query(getLinksQuery, parameterSource, linkRowMapper);
@@ -36,12 +36,12 @@ public class LinkRepositorySQL {
     public List<Link> getLinksByUrlAndChatId(String link, Long chatId) {
         String getLinksQuery =
                 """
-            select * from link
-            where url_id = (select url_id from url where url = (:url))
-            and users_id = (select users_id from users where chat_id = (:chat_id))""";
+            select * from scrapper.link
+            where url_id = (select url_id from scrapper.url where url = (:url))
+            and user_id = :chatId""";
 
         SqlParameterSource parameterSource =
-                new MapSqlParameterSource().addValue("url", link).addValue("chat_id", chatId);
+                new MapSqlParameterSource().addValue("url", link).addValue("chatId", chatId);
 
         try {
             return template.query(getLinksQuery, parameterSource, linkRowMapper);
@@ -50,34 +50,35 @@ public class LinkRepositorySQL {
         }
     }
 
-    public void createLink(Long usersId) {
+    public void createLink(Long userId, Long urlId) {
         String createSql = """
-            insert into link(users_id) values (:users_id)""";
+            insert into scrapper.link(user_id, url_id) values (:userId, :urlId)""";
 
-        SqlParameterSource parameterSource = new MapSqlParameterSource("users_id", usersId);
+        SqlParameterSource parameterSource =
+                new MapSqlParameterSource().addValue("userId", userId).addValue("urlId", urlId);
 
         template.update(createSql, parameterSource);
     }
 
-    public Link getLinkByUsersIdAndEmptyUrl(Long usersId) {
-        String getLinkSql = """
-            select * from link where users_id = (:usersId) and url_id is null""";
+    //    public Link getLinkByUsersIdAndEmptyUrl(Long usersId) {
+    //        String getLinkSql = """
+    //            select * from scrapper.link where users_id = (:usersId) and url_id is null""";
+    //
+    //        SqlParameterSource parameterSource = new MapSqlParameterSource("usersId", usersId);
+    //
+    //        try {
+    //            return template.query(getLinkSql, parameterSource, linkRowMapper).getFirst();
+    //        } catch (EmptyResultDataAccessException e) {
+    //            return null;
+    //        }
+    //    }
 
-        SqlParameterSource parameterSource = new MapSqlParameterSource("usersId", usersId);
-
-        try {
-            return template.query(getLinkSql, parameterSource, linkRowMapper).getFirst();
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
-    }
-
-    public void updateLinkUrl(Long linkId, Long urlId) {
+    public void updateLinkUrl(Long userId, Long urlId) {
         String updateLinkSql = """
-            update link set url_id = (:urlId) where link_id = (:linkId)""";
+            update scrapper.link set url_id = (:urlId) where user_id = (:userId)""";
 
         SqlParameterSource parameterSource =
-                new MapSqlParameterSource().addValue("urlId", urlId).addValue("linkId", linkId);
+                new MapSqlParameterSource().addValue("urlId", urlId).addValue("userId", userId);
 
         template.update(updateLinkSql, parameterSource);
     }
@@ -85,9 +86,9 @@ public class LinkRepositorySQL {
     public void deleteLink(Long chatId, String link) {
         String deleteLinkSql =
                 """
-            delete from link
-            where users_id = (select users_id from users where chat_id = :chatId)
-            and url_id = (select url_id from url where url = :link)""";
+            delete from scrapper.link
+            where user_id = (select chat_id from scrapper.user where chat_id = :chatId)
+            and url_id = (select url_id from scrapper.url where url = :link)""";
 
         SqlParameterSource parameterSource =
                 new MapSqlParameterSource().addValue("chatId", chatId).addValue("link", link);
@@ -98,9 +99,9 @@ public class LinkRepositorySQL {
     public List<Link> getLinksByChatIdAndTagsIn(Long chatId, List<String> tags) {
         String getTagsByChatIdAndTagsInSql =
                 """
-            select distinct link_id, users_id, url_id from link join link_tags using (link_id)
-            where users_id = (select users_id from users where chat_id = :chatId)
-            and tags in (:tags)""";
+            select distinct user_id, url_id from scrapper.link join scrapper.link_tags using (user_id, url_id)
+            where user_id = (select chat_id from scrapper.user where chat_id = :chatId)
+            and tag in (:tags)""";
 
         SqlParameterSource parameterSource =
                 new MapSqlParameterSource().addValue("chatId", chatId).addValue("tags", tags);
@@ -114,7 +115,7 @@ public class LinkRepositorySQL {
 
     public List<Link> getLinksByUrlId(Long urlId) {
         String getLinksSql = """
-            select * from link where url_id = :urlId""";
+            select * from scrapper.link where url_id = :urlId""";
 
         SqlParameterSource parameterSource = new MapSqlParameterSource().addValue("urlId", urlId);
 
@@ -126,7 +127,7 @@ public class LinkRepositorySQL {
     }
 
     public List<Link> findAll() {
-        String findAllSql = "select * from link";
+        String findAllSql = "select * from scrapper.link";
         return template.query(findAllSql, linkRowMapper);
     }
 }

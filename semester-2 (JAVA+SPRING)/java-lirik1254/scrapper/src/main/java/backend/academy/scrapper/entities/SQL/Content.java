@@ -6,11 +6,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Content {
-    private long contentId;
+    private Long id;
     private String answer;
+    private String updatedType;
     private String creationTime;
     private String title;
-    private String updatedType;
     private String userName;
-    private long urlId;
+    private Long urlId;
 }

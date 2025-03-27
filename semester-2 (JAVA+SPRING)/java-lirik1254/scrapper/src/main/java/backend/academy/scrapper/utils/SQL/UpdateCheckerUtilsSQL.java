@@ -28,12 +28,12 @@ public class UpdateCheckerUtilsSQL {
 
     public void processUrlPage(List<Url> urlPage) {
         urlPage.forEach(url -> {
-            List<Content> contentByUrlId = contentRepositorySQL.getContentByUrlId(url.urlId());
+            List<Content> contentByUrlId = contentRepositorySQL.getContentByUrlId(url.id());
             List<ContentDTO> oldContentDTO = contentUtilsSQL.fromContentListToContentDTOList(contentByUrlId);
             List<ContentDTO> newContent = fetchContent(url);
             List<ContentDTO> newItems = getNewItemsUtils.getNewItems(oldContentDTO, newContent);
 
-            List<Link> linksByUrlId = linkRepositorySQL.getLinksByUrlId(url.urlId());
+            List<Link> linksByUrlId = linkRepositorySQL.getLinksByUrlId(url.id());
 
             if (!newItems.isEmpty()) {
                 linksByUrlId.forEach(link -> {

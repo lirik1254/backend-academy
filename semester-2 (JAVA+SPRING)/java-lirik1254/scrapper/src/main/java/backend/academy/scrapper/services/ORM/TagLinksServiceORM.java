@@ -27,12 +27,12 @@ public class TagLinksServiceORM implements TagLinksService {
                 .addKeyValue("access-type", "ORM")
                 .setMessage("Получение ссылок")
                 .log();
-        List<Link> retLinks = linkRepositoryORM.findByUsers_ChatIdAndTagsIn(chatId, tags);
+        List<Link> retLinks = linkRepositoryORM.findByUser_ChatIdAndTagsIn(chatId, tags);
 
         List<LinkResponseDTO> linkResponseDTOS = new ArrayList<>();
 
         retLinks.forEach(link -> linkResponseDTOS.add(
-                new LinkResponseDTO(Math.toIntExact(link.linkId()), link.url().url(), link.tags(), link.filters())));
+                new LinkResponseDTO(Math.toIntExact(link.hashCode()), link.url().url(), link.tags(), link.filters())));
 
         return new ListLinksResponseDTO(linkResponseDTOS, linkResponseDTOS.size());
     }

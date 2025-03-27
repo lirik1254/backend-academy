@@ -18,9 +18,10 @@ public class TagLinksClient {
     private final BotConfig botConfig;
     private final UnsuccessfulResponseUtils unsuccessfulResponseUtils;
 
-    public TagLinksClient(BotConfig botConfig, UnsuccessfulResponseUtils unsuccessfulResponseUtils) {
+    public TagLinksClient(
+            BotConfig botConfig, UnsuccessfulResponseUtils unsuccessfulResponseUtils, RestClient restClient) {
         this.botConfig = botConfig;
-        this.restClient = RestClient.create(botConfig.baseUrl());
+        this.restClient = restClient;
         this.unsuccessfulResponseUtils = unsuccessfulResponseUtils;
     }
 

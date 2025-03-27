@@ -13,8 +13,9 @@ public class LinkFiltersRowMapper implements RowMapper<LinkFilters> {
     @Override
     public LinkFilters mapRow(ResultSet rs, int rowNum) throws SQLException {
         LinkFilters linkFilters = new LinkFilters();
-        linkFilters.linkId(rs.getLong("link_id"));
-        linkFilters.filters(rs.getString("filters"));
+        linkFilters.userId(rs.getLong("user_id"));
+        linkFilters.urlId(rs.getLong("url_id"));
+        linkFilters.filter(rs.getString("filter"));
         return linkFilters;
     }
 }

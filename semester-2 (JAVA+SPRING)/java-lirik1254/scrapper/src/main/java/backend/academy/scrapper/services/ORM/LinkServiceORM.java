@@ -6,9 +6,11 @@ import backend.academy.scrapper.clients.GitHubInfoClient;
 import backend.academy.scrapper.clients.StackOverflowClient;
 import backend.academy.scrapper.entities.JPA.Content;
 import backend.academy.scrapper.entities.JPA.Link;
+import backend.academy.scrapper.entities.JPA.LinkId;
 import backend.academy.scrapper.entities.JPA.Url;
-import backend.academy.scrapper.entities.JPA.Users;
+import backend.academy.scrapper.entities.JPA.User;
 import backend.academy.scrapper.exceptions.LinkNotFoundException;
+import backend.academy.scrapper.repositories.ORM.ContentRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.LinkRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UsersRepositoryORM;
@@ -19,6 +21,8 @@ import dto.ContentDTO;
 import dto.LinkResponseDTO;
 import dto.ListLinksResponseDTO;
 import general.RegexCheck;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +44,10 @@ public class LinkServiceORM implements LinkService {
     private final StackOverflowClient stackOverflowClient;
     private final UrlRepositoryORM urlRepositoryORM;
     private final RegistrationServiceORM registrationServiceORM;
+    private final ContentRepositoryORM contentRepositoryORM;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
@@ -52,17 +60,17 @@ public class LinkServiceORM implements LinkService {
                 .log();
         List<String> filters = new ArrayList<>(new HashSet<>(addRequest.filters()));
         List<String> tags = new ArrayList<>(new HashSet<>(addRequest.tags()));
-        Users users = usersRepositoryORM.getByChatId(chatId);
-        if (users == null) {
+        User user = usersRepositoryORM.getByChatId(chatId);
+        if (user == null) {
             registrationServiceORM.registerUser(chatId);
-            users = usersRepositoryORM.getByChatId(chatId);
+            user = usersRepositoryORM.getByChatId(chatId);
         }
 
         String link = addRequest.link();
         LinkType linkType = regexCheck.isGithub(link) ? LinkType.GITHUB : LinkType.STACKOVERFLOW;
 
         Link addLink;
-        if (!users.links().stream()
+        if (!user.links().stream()
                 .filter(user_link -> user_link.url().url().equals(link))
                 .toList()
                 .isEmpty()) {
@@ -73,20 +81,15 @@ public class LinkServiceORM implements LinkService {
             linkRepositoryORM.save(addLink);
         } else {
             addLink = new Link();
-            addLink.filters(filters);
-            addLink.tags(tags);
 
-            urlCreate(link, addLink, linkType);
-
-            users.addLink(addLink);
-            usersRepositoryORM.save(users);
+            urlCreate(link, addLink, linkType, user, addRequest);
         }
 
         return new LinkResponseDTO(
-                Math.toIntExact(addLink.linkId()), addLink.url().url(), addLink.tags(), addLink.filters());
+                Math.toIntExact(addLink.id().hashCode()), addLink.url().url(), addLink.tags(), addLink.filters());
     }
 
-    private void urlCreate(String link, Link addLink, LinkType linkType) {
+    private void urlCreate(String link, Link addLink, LinkType linkType, User user, AddLinkDTO addLinkDTO) {
         log.atInfo()
                 .addKeyValue("link", link)
                 .addKeyValue("access-type", "ORM")
@@ -95,31 +98,33 @@ public class LinkServiceORM implements LinkService {
         Url url;
         if (urlRepositoryORM.existsUrlByUrl(link)) {
             url = urlRepositoryORM.getUrlByUrl(link);
-            url.addLink(addLink);
-            linkRepositoryORM.save(addLink);
         } else {
             url = new Url();
             url.url(link);
             url.linkType(linkType);
+            urlRepositoryORM.saveAndFlush(url);
             List<ContentDTO> contentDTOs;
             if (linkType.equals(LinkType.GITHUB)) {
                 contentDTOs = gitHubInfoClient.getGithubContent(link);
             } else {
                 contentDTOs = stackOverflowClient.getSOContent(link);
             }
-            contentDTOs.forEach(content -> {
-                Content addContent = new Content();
-                addContent.updatedType(content.type());
-                addContent.answer(content.answer());
-                addContent.creationTime(content.creationTime());
-                addContent.title(content.title());
-                addContent.userName(content.userName());
-
-                url.addContent(addContent);
+            contentDTOs.forEach(contentDTO -> {
+                Content createContent = Content.createFromDTO(linkType, contentDTO, url);
+                contentRepositoryORM.save(createContent);
             });
-            url.addLink(addLink);
-            urlRepositoryORM.save(url);
         }
+        addLink.setUrl(url);
+        addLink.setUser(user);
+        LinkId linkId = new LinkId();
+        linkId.userId(user.chatId());
+        linkId.urlId(url.id());
+        addLink.id(linkId);
+        entityManager.clear();
+        linkRepositoryORM.save(addLink);
+        addLink.filters(addLinkDTO.filters());
+        addLink.tags(addLinkDTO.tags());
+        linkRepositoryORM.save(addLink);
     }
 
     @Override
@@ -133,13 +138,13 @@ public class LinkServiceORM implements LinkService {
                 .log();
         List<Link> linkToDelete = linkRepositoryORM.findByUrlAndChatId(link, chatId);
         if (!linkToDelete.isEmpty()) {
-            Users users = usersRepositoryORM.findByChatId(chatId);
+            User user = usersRepositoryORM.findByChatId(chatId);
             Url url = urlRepositoryORM.getUrlByUrl(link);
 
             Link getLinkToDelete = linkToDelete.getFirst();
             getLinkToDelete.deleteLink();
 
-            usersRepositoryORM.save(users);
+            usersRepositoryORM.save(user);
             urlRepositoryORM.save(url);
 
             if (url.links().isEmpty()) {
@@ -147,7 +152,10 @@ public class LinkServiceORM implements LinkService {
             }
 
             return new LinkResponseDTO(
-                    Math.toIntExact(getLinkToDelete.linkId()), link, getLinkToDelete.tags(), getLinkToDelete.filters());
+                    Math.toIntExact(getLinkToDelete.id().hashCode()),
+                    link,
+                    getLinkToDelete.tags(),
+                    getLinkToDelete.filters());
         } else {
             throw new LinkNotFoundException(LINK_NOT_FOUND);
         }
@@ -160,11 +168,11 @@ public class LinkServiceORM implements LinkService {
                 .addKeyValue("access-type", "ORM")
                 .setMessage("Получение ссылок")
                 .log();
-        List<Link> links = linkRepositoryORM.findByUsers_ChatId(chatId);
+        List<Link> links = linkRepositoryORM.findByUser_ChatId(chatId);
         List<LinkResponseDTO> linkResponseDTOS = new ArrayList<>();
 
-        links.forEach(link -> linkResponseDTOS.add(
-                new LinkResponseDTO(Math.toIntExact(link.linkId()), link.url().url(), link.tags(), link.filters())));
+        links.forEach(link -> linkResponseDTOS.add(new LinkResponseDTO(
+                Math.toIntExact(link.id().hashCode()), link.url().url(), link.tags(), link.filters())));
 
         return new ListLinksResponseDTO(linkResponseDTOS, linkResponseDTOS.size());
     }

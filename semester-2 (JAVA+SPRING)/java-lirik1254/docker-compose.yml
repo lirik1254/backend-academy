@@ -5,8 +5,8 @@ services:
     image: postgres:17
     container_name: postgresLinkTracker
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: linkTrackerDB
     ports:
       - "5252:5432"

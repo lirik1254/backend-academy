@@ -17,9 +17,9 @@ public class RegistrationClient {
     private final RestClient restClient;
     private final BotConfig botConfig;
 
-    public RegistrationClient(BotConfig botConfig) {
+    public RegistrationClient(BotConfig botConfig, RestClient restClient) {
         this.botConfig = botConfig;
-        this.restClient = RestClient.create(botConfig.baseUrl());
+        this.restClient = restClient;
     }
 
     public String registerUser(Long chatId) {

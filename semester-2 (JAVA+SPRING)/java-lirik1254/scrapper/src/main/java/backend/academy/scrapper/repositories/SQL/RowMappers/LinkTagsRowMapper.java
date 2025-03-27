@@ -13,8 +13,9 @@ public class LinkTagsRowMapper implements RowMapper<LinkTags> {
     @Override
     public LinkTags mapRow(ResultSet rs, int rowNum) throws SQLException {
         LinkTags linkTags = new LinkTags();
-        linkTags.linkId(rs.getLong("link_id"));
-        linkTags.text(rs.getString("tags"));
+        linkTags.userId(rs.getLong("user_id"));
+        linkTags.urlId(rs.getLong("url_id"));
+        linkTags.tag(rs.getString("tag"));
         return linkTags;
     }
 }

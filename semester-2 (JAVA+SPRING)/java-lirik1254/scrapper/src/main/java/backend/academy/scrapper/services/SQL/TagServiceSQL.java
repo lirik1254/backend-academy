@@ -22,6 +22,6 @@ public class TagServiceSQL implements TagService {
                 .addKeyValue("access-type", "SQL")
                 .setMessage("Получение всех тегов")
                 .log();
-        return tagRepositorySQL.getAllTagsByChatId(chatId);
+        return tagRepositorySQL.getAllTagsByUserId(chatId);
     }
 }

@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import backend.academy.scrapper.registration.DeleteUsersTestsBase;
+import backend.academy.scrapper.registration.DeleteUserTestsBase;
 import backend.academy.scrapper.repositories.ORM.ContentRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.LinkRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class DeleteUserTestsORM extends DeleteUsersTestsBase {
+public class DeleteUserTestsORM extends DeleteUserTestsBase {
     @Autowired
     private LinkRepositoryORM linkRepositoryORM;
 

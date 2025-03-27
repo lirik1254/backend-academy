@@ -45,9 +45,8 @@ public class GetAllTagsTestsBase extends dbInitializeBase {
         try (Connection conn =
                 DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())) {
             try (Statement stmt = conn.createStatement()) {
-                stmt.execute("DROP SCHEMA public CASCADE");
-                stmt.execute("CREATE SCHEMA public");
-                stmt.execute("GRANT ALL ON SCHEMA public TO public");
+                stmt.execute("DROP SCHEMA scrapper CASCADE");
+                stmt.execute("CREATE SCHEMA scrapper");
             }
 
             runMigrations(conn);
@@ -102,17 +101,20 @@ public class GetAllTagsTestsBase extends dbInitializeBase {
         AddLinkDTO secondRequest = new AddLinkDTO(secondLink, secondTags, secondFilters);
 
         String contentTitle = "Новое issue";
-        UpdateType contentUpdateType = UpdateType.ISSUE;
+        UpdateType contentUpdateTypeGH = UpdateType.ISSUE;
+        UpdateType contentUpdateTypeSO = UpdateType.ANSWER;
         String contentUserName = "lirik1254";
         String contentCreationTime = "2025-10-10";
         String contentAnswer = "i create new issue";
 
-        ContentDTO addContentDTO =
-                new ContentDTO(contentUpdateType, contentTitle, contentUserName, contentCreationTime, contentAnswer);
+        ContentDTO addContentDTOSO =
+                new ContentDTO(contentUpdateTypeSO, contentTitle, contentUserName, contentCreationTime, contentAnswer);
+        ContentDTO addContentDTOGH =
+                new ContentDTO(contentUpdateTypeGH, contentTitle, contentUserName, contentCreationTime, contentAnswer);
 
-        when(gitHubInfoClient.getGithubContent(firstLink)).thenReturn(List.of(addContentDTO));
+        when(gitHubInfoClient.getGithubContent(firstLink)).thenReturn(List.of(addContentDTOGH));
 
-        when(stackOverflowClient.getSOContent(secondLink)).thenReturn(List.of(addContentDTO));
+        when(stackOverflowClient.getSOContent(secondLink)).thenReturn(List.of(addContentDTOSO));
 
         mockMvc.perform(post("/links")
                 .header("Tg-Chat-Id", 123)
@@ -148,17 +150,20 @@ public class GetAllTagsTestsBase extends dbInitializeBase {
         AddLinkDTO secondRequest = new AddLinkDTO(secondLink, secondTags, secondFilters);
 
         String contentTitle = "Новое issue";
-        UpdateType contentUpdateType = UpdateType.ISSUE;
+        UpdateType contentUpdateTypeGH = UpdateType.ISSUE;
+        UpdateType contentUpdateTypeSO = UpdateType.ANSWER;
         String contentUserName = "lirik1254";
         String contentCreationTime = "2025-10-10";
         String contentAnswer = "i create new issue";
 
-        ContentDTO addContentDTO =
-                new ContentDTO(contentUpdateType, contentTitle, contentUserName, contentCreationTime, contentAnswer);
+        ContentDTO addContentDTOSO =
+                new ContentDTO(contentUpdateTypeSO, contentTitle, contentUserName, contentCreationTime, contentAnswer);
+        ContentDTO addContentDTOGH =
+                new ContentDTO(contentUpdateTypeGH, contentTitle, contentUserName, contentCreationTime, contentAnswer);
 
-        when(gitHubInfoClient.getGithubContent(firstLink)).thenReturn(List.of(addContentDTO));
+        when(gitHubInfoClient.getGithubContent(firstLink)).thenReturn(List.of(addContentDTOGH));
 
-        when(stackOverflowClient.getSOContent(secondLink)).thenReturn(List.of(addContentDTO));
+        when(stackOverflowClient.getSOContent(secondLink)).thenReturn(List.of(addContentDTOSO));
 
         mockMvc.perform(post("/links")
                 .header("Tg-Chat-Id", 123)

@@ -14,7 +14,7 @@ import backend.academy.scrapper.entities.SQL.Link;
 import backend.academy.scrapper.entities.SQL.LinkFilters;
 import backend.academy.scrapper.entities.SQL.LinkTags;
 import backend.academy.scrapper.entities.SQL.Url;
-import backend.academy.scrapper.entities.SQL.Users;
+import backend.academy.scrapper.entities.SQL.User;
 import backend.academy.scrapper.link.AddLinkTestsBase;
 import backend.academy.scrapper.repositories.SQL.ContentRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.FilterRepositorySQL;
@@ -26,6 +26,7 @@ import dto.AddLinkDTO;
 import dto.ContentDTO;
 import dto.UpdateType;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,29 +79,32 @@ public class AddLinkTestsSQL extends AddLinkTestsBase {
 
         performAddLinkRequest(request, 123L, githubLink, tags, filters);
 
-        Users users = usersRepositorySQL.getByChatId(123L);
-        assertNotNull(users);
+        User user = usersRepositorySQL.getByChatId(123L);
+        assertNotNull(user);
 
-        List<Link> userLinks = linkRepositorySQL.getUserLinks(users.chatId());
+        List<Link> userLinks = linkRepositorySQL.getUserLinks(user.chatId());
         assertEquals(1, userLinks.size());
 
         Link link = userLinks.getFirst();
-        List<LinkTags> linkTags = tagRepositorySQL.getTagsByLinkId(link.linkId());
+        Long urlId = link.urlId();
+        Long userId = link.userId();
+
+        List<LinkTags> linkTags = tagRepositorySQL.getTagsByUrlIdAndUserId(urlId, userId);
         assertEquals(2, linkTags.size());
 
-        List<String> linkTagsString = linkTags.stream().map(LinkTags::text).toList();
+        List<String> linkTagsString = linkTags.stream().map(LinkTags::tag).toList();
         assertTrue(linkTagsString.containsAll(tags));
 
-        List<LinkFilters> linkFilters = filterRepositorySQL.getFiltersByLinkId(link.linkId());
+        List<LinkFilters> linkFilters = filterRepositorySQL.getFiltersByUserIdAndUrlId(urlId, userId);
         assertEquals(1, linkFilters.size());
 
-        assertTrue(linkFilters.getFirst().filters().contains("filter1"));
+        assertTrue(linkFilters.getFirst().filter().contains("filter1"));
 
         Url url = urlRepositorySQL.getByUrl(githubLink);
         assertEquals("GITHUB", url.linkType());
         assertEquals(githubLink, url.url());
 
-        List<Content> contents = contentRepositorySQL.getContentByUrlId(url.urlId());
+        List<Content> contents = contentRepositorySQL.getContentByUrlId(url.id());
 
         assertEquals(1, contents.size());
 
@@ -133,29 +137,32 @@ public class AddLinkTestsSQL extends AddLinkTestsBase {
 
         performAddLinkRequest(request, 123L, stackOverflowLink, tags, filters);
 
-        Users users = usersRepositorySQL.getByChatId(123L);
-        assertNotNull(users);
+        User user = usersRepositorySQL.getByChatId(123L);
+        assertNotNull(user);
 
-        List<Link> userLinks = linkRepositorySQL.getUserLinks(users.chatId());
+        List<Link> userLinks = linkRepositorySQL.getUserLinks(user.chatId());
         assertEquals(1, userLinks.size());
 
         Link link = userLinks.getFirst();
-        List<LinkTags> linkTags = tagRepositorySQL.getTagsByLinkId(link.linkId());
+        Long urlId = link.urlId();
+        Long userId = link.userId();
+
+        List<LinkTags> linkTags = tagRepositorySQL.getTagsByUrlIdAndUserId(urlId, userId);
         assertEquals(2, linkTags.size());
 
-        List<String> linkTagsString = linkTags.stream().map(LinkTags::text).toList();
+        List<String> linkTagsString = linkTags.stream().map(LinkTags::tag).toList();
         assertTrue(linkTagsString.containsAll(tags));
 
-        List<LinkFilters> linkFilters = filterRepositorySQL.getFiltersByLinkId(link.linkId());
+        List<LinkFilters> linkFilters = filterRepositorySQL.getFiltersByUserIdAndUrlId(urlId, userId);
         assertEquals(1, linkFilters.size());
 
-        assertTrue(linkFilters.getFirst().filters().contains("filter1"));
+        assertTrue(linkFilters.getFirst().filter().contains("filter1"));
 
         Url url = urlRepositorySQL.getByUrl(stackOverflowLink);
         assertEquals("STACKOVERFLOW", url.linkType());
         assertEquals(stackOverflowLink, url.url());
 
-        List<Content> contents = contentRepositorySQL.getContentByUrlId(url.urlId());
+        List<Content> contents = contentRepositorySQL.getContentByUrlId(url.id());
 
         assertEquals(1, contents.size());
 
@@ -188,9 +195,7 @@ public class AddLinkTestsSQL extends AddLinkTestsBase {
 
         performAddLinkRequest(request, 123L, stackOverflowLink, tags, filters);
 
-        List<String> savedTags = tagRepositorySQL.getTagsByLinkId(1L).stream()
-                .map(LinkTags::text)
-                .toList();
+        List<String> savedTags = tagRepositorySQL.getAllTagsByUserId(123L);
         assertEquals(tags, savedTags);
 
         AddLinkDTO changeTagRequest = new AddLinkDTO(stackOverflowLink, List.of("52"), filters);
@@ -200,14 +205,12 @@ public class AddLinkTestsSQL extends AddLinkTestsBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changeTagRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.url").value(request.link()))
                 .andExpect(jsonPath("$.tags", hasItems("52")))
                 .andExpect(jsonPath("$.filters", hasItems("filter1")));
 
-        savedTags = tagRepositorySQL.getTagsByLinkId(1L).stream()
-                .map(LinkTags::text)
-                .toList();
+        savedTags = tagRepositorySQL.getAllTagsByUserId(123L);
         assertEquals(List.of("52"), savedTags);
 
         assertEquals(1, urlRepositorySQL.findAllWithPagination(0, 10).getTotalElements());

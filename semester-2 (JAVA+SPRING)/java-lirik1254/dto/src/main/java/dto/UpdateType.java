@@ -1,10 +1,10 @@
 package dto;
 
 public enum UpdateType {
-    COMMENT("Комментарий"),
-    ANSWER("Ответ"),
-    PR("Pull Request"),
-    ISSUE("Issue");
+    COMMENT("COMMENT"),
+    ANSWER("ANSWER"),
+    PR("PR"),
+    ISSUE("ISSUE");
 
     private final String value;
 

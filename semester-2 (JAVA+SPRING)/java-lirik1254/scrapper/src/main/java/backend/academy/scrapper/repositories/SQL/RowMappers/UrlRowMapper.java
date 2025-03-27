@@ -13,7 +13,7 @@ public class UrlRowMapper implements RowMapper<Url> {
     @Override
     public Url mapRow(ResultSet rs, int rowNum) throws SQLException {
         Url url = new Url();
-        url.urlId(rs.getLong("url_id"));
+        url.id(rs.getLong("id"));
         url.url(rs.getString("url"));
         url.linkType(rs.getString("link_type"));
         return url;
