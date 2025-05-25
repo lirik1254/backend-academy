@@ -1,4 +1,4 @@
-![Build](https://github.com/central-university-dev/backend-academy-2025-spring-template/actions/workflows/build.yaml/badge.svg)
+https://github.com/user-attachments/assets/e1b98406-84bc-40d4-b8a3-6bed98199328
 
 # Link Tracker
 
