@@ -15,7 +15,6 @@ https://github.com/user-attachments/assets/e1b98406-84bc-40d4-b8a3-6bed98199328
 * Bot
 * Scrapper
 
-Для работы требуется БД `PostgreSQL`.
 Для запуска системы введите:
 
 ```shell
