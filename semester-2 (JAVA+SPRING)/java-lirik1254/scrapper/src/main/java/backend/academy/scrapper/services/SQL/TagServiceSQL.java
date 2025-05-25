@@ -1,7 +1,7 @@
 package backend.academy.scrapper.services.SQL;
 
 import backend.academy.scrapper.repositories.SQL.TagRepositorySQL;
-import backend.academy.scrapper.services.TagService;
+import backend.academy.scrapper.services.interfaces.TagService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

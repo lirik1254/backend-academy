@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import backend.academy.bot.BaseConfigure;
 import backend.academy.bot.services.TelegramBotService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
@@ -159,6 +160,6 @@ public class ListCommandTests extends BaseConfigure {
 
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
 
-        assertEquals("Некорректные параметры52", sentMessage.getParameters().get("text"));
+        assertEquals("Ошибка", sentMessage.getParameters().get("text"));
     }
 }

@@ -37,9 +37,21 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
 
-@SpringBootTest
+@SpringBootTest(properties = "app.base-url=http://localhost:8087")
+@Testcontainers
 public class UntrackCommandTests {
+    @Container
+    protected static final ConfluentKafkaContainer kafka = new ConfluentKafkaContainer("confluentinc/cp-kafka:7.4.0");
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+    }
+
     protected static WireMockServer wireMockServer;
     protected static Update update;
     protected static Message message;
@@ -61,11 +73,6 @@ public class UntrackCommandTests {
         when(update.message()).thenReturn(message);
         when(message.chat()).thenReturn(chat);
         when(chat.id()).thenReturn(123L);
-    }
-
-    @DynamicPropertySource
-    static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("app.base-url", () -> "http://localhost:8087");
     }
 
     @AfterAll
@@ -219,8 +226,7 @@ public class UntrackCommandTests {
 
         SendMessage sentMessage = captor.getValue();
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
-        assertEquals(
-                "Некорректные параметры запроса52", sentMessage.getParameters().get("text"));
+        assertEquals("Ошибка", sentMessage.getParameters().get("text"));
         assertEquals(State.START, untrackCommand.userStates().get(123L));
     }
 
@@ -254,7 +260,7 @@ public class UntrackCommandTests {
 
         SendMessage sentMessage = captor.getValue();
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
-        assertEquals("Ссылка не найдена", sentMessage.getParameters().get("text"));
+        assertEquals("Ошибка", sentMessage.getParameters().get("text"));
         assertEquals(State.START, untrackCommand.userStates().get(123L));
     }
 }

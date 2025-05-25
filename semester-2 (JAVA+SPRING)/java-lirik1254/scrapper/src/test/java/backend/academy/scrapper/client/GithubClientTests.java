@@ -7,16 +7,16 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
 import backend.academy.scrapper.clients.GitHubInfoClient;
-import backend.academy.scrapper.dbInitializeBase;
-import backend.academy.scrapper.exceptions.RepositoryNotFoundException;
 import backend.academy.scrapper.utils.ConvertLinkToApiUtils;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import dto.ContentDTO;
 import dto.UpdateType;
+import general.RetryException;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,11 +31,15 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @DisplayName("Тестирование Github клиента")
 @Import(TestConfig.class)
 @Testcontainers
-public class GithubClientTests extends dbInitializeBase {
+public class GithubClientTests extends ExternalInitBase {
     protected static WireMockServer wireMockServer;
 
     @BeforeAll
@@ -110,7 +114,7 @@ public class GithubClientTests extends dbInitializeBase {
                         .withStatus(400)
                         .withBody("""
                     incorrect json answer""")));
-        assertThrows(RepositoryNotFoundException.class, () -> gitHubInfoClient.getGithubContent(LINK));
+        assertThrows(RetryException.class, () -> gitHubInfoClient.getGithubContent(LINK));
     }
 
     @Test

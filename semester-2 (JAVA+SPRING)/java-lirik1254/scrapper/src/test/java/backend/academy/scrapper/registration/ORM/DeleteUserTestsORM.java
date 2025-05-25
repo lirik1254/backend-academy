@@ -16,7 +16,16 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 public class DeleteUserTestsORM extends DeleteUserTestsBase {
     @Autowired
     private LinkRepositoryORM linkRepositoryORM;
@@ -30,8 +39,14 @@ public class DeleteUserTestsORM extends DeleteUserTestsBase {
     @Autowired
     private UsersRepositoryORM usersRepositoryORM;
 
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("app.access-type", () -> "ORM");
+    }
+
     @Test
     @DisplayName("Пользователь, которого собираются удалить, существует")
+    @DirtiesContext
     public void test1() throws Exception {
         List<String> tags = List.of("tag1", "tag2");
         List<String> filters = List.of("filter1");
@@ -66,6 +81,7 @@ public class DeleteUserTestsORM extends DeleteUserTestsBase {
 
     @Test
     @DisplayName("Пользователь, которого собираются удалить, не существует")
+    @DirtiesContext
     public void test2() throws Exception {
         assertTrue(usersRepositoryORM.findAll().isEmpty());
 

@@ -103,7 +103,7 @@ public class TrackCommand implements Command {
         userStates.put(chatId, State.WAITING_FOR_FILTERS);
         bot.execute(new SendMessage(
                 chatId,
-                "Введите фильтры (опционально, например, user:dummy)\n" + "Если фильтры не нужны - введите /skip"));
+                "Введите фильтры (опционально, например, user=dummy)\n" + "Если фильтры не нужны - введите /skip"));
     }
 
     private void waitingForFilters(Long chatId, String message) {
@@ -130,13 +130,19 @@ public class TrackCommand implements Command {
                     .addKeyValue(CHAT_ID_STRING, chatId)
                     .setMessage("Пользователь ввёл фильтры")
                     .log();
-            bot.execute(new SendMessage(chatId, trackClient.trackLink(chatId, userUrl.get(chatId), tags, filters)));
+            String trackLinkMessage = "";
+            try {
+                trackLinkMessage = trackClient.trackLink(chatId, userUrl.get(chatId), tags, filters);
+            } catch (Exception e) {
+                trackLinkMessage = "Ошибка";
+            }
+            bot.execute(new SendMessage(chatId, trackLinkMessage));
         } else {
             log.atInfo()
                     .addKeyValue(CHAT_ID_STRING, chatId)
                     .setMessage("Пользователь некорректно ввёл фильтры")
                     .log();
-            bot.execute(new SendMessage(chatId, "Введите фильтры в формате filter:filter"));
+            bot.execute(new SendMessage(chatId, "Введите фильтры в формате user=username"));
         }
     }
 }

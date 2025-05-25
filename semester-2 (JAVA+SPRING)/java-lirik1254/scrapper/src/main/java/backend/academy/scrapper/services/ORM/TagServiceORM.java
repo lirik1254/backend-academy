@@ -1,7 +1,7 @@
 package backend.academy.scrapper.services.ORM;
 
 import backend.academy.scrapper.repositories.ORM.LinkRepositoryORM;
-import backend.academy.scrapper.services.TagService;
+import backend.academy.scrapper.services.interfaces.TagService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

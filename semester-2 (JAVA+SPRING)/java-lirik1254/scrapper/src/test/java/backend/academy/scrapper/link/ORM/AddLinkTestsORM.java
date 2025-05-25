@@ -19,7 +19,9 @@ import backend.academy.scrapper.repositories.ORM.UsersRepositoryORM;
 import backend.academy.scrapper.utils.LinkType;
 import dto.AddLinkDTO;
 import dto.ContentDTO;
+import dto.Settings;
 import dto.UpdateType;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +32,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 public class AddLinkTestsORM extends AddLinkTestsBase {
+
+    @Autowired
+    EntityManager entityManager;
 
     @Autowired
     UrlRepositoryORM urlRepositoryORM;
@@ -69,10 +74,11 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
         User user = users.getFirst();
         assertEquals(123, user.chatId());
         assertEquals(1, user.links().size());
+        assertEquals(Settings.IMMEDIATELY, user.userSettings().notifyMood());
 
         Link link = user.links().getFirst();
-        assertEquals(tags, link.tags());
-        assertEquals(filters, link.filters());
+        assertEquals(tags, link.getTags());
+        assertEquals(filters, link.getFilters());
 
         Url url = link.url();
         assertEquals(LinkType.GITHUB, url.linkType());
@@ -121,8 +127,8 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
         assertEquals(1, user.links().size());
 
         Link link = user.links().getFirst();
-        assertEquals(tags, link.tags());
-        assertEquals(filters, link.filters());
+        assertEquals(tags, link.getTags());
+        assertEquals(filters, link.getFilters());
 
         Url url = link.url();
         assertEquals(LinkType.STACKOVERFLOW, url.linkType());
@@ -146,7 +152,7 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
     @DisplayName("Тестирование добавление одной и той же ссылки у одного и того же пользователя")
     public void test4() throws Exception {
         List<String> tags = List.of("tag1", "tag2");
-        List<String> filters = List.of("filter1");
+        List<String> filters = List.of("user=52");
 
         String stackOverflowLink = "https://stackoverflow.com/questions/34534534";
         AddLinkDTO request = new AddLinkDTO(stackOverflowLink, tags, filters);
@@ -162,13 +168,13 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
                         contentUpdateType, contentTitle, contentUserName, contentCreationTime, contentAnswer)));
 
         performAddLinkRequest(request, 123L, stackOverflowLink, tags, filters);
+        entityManager.clear();
 
         List<String> savedTags =
-                usersRepositoryORM.findAll().getFirst().links().getFirst().tags();
+                usersRepositoryORM.findAll().getFirst().links().getFirst().getTags();
         assertEquals(tags, savedTags);
 
         AddLinkDTO changeTagRequest = new AddLinkDTO(stackOverflowLink, List.of("52"), filters);
-
         mockMvc.perform(post("/links")
                         .header("Tg-Chat-Id", 123)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -177,9 +183,9 @@ public class AddLinkTestsORM extends AddLinkTestsBase {
                 .andExpect(jsonPath("$.id", Matchers.any(int.class)))
                 .andExpect(jsonPath("$.url").value(request.link()))
                 .andExpect(jsonPath("$.tags", hasItems("52")))
-                .andExpect(jsonPath("$.filters", hasItems("filter1")));
+                .andExpect(jsonPath("$.filters", hasItems("user=52")));
 
-        savedTags = usersRepositoryORM.findAll().getFirst().links().getFirst().tags();
+        savedTags = usersRepositoryORM.findAll().getFirst().links().getFirst().getTags();
         assertEquals(List.of("52"), savedTags);
 
         assertEquals(1, usersRepositoryORM.findAll().getFirst().links().size());

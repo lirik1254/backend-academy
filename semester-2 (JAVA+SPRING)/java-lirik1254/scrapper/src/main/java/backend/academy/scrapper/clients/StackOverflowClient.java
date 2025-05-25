@@ -1,13 +1,19 @@
 package backend.academy.scrapper.clients;
 
-import backend.academy.scrapper.ScrapperConfig;
+import backend.academy.scrapper.config.ScrapperConfig;
 import backend.academy.scrapper.exceptions.QuestionNotFoundException;
+import backend.academy.scrapper.micrometer.link.time.LinkTimeMetric;
 import backend.academy.scrapper.utils.ConvertLinkToApiUtils;
+import backend.academy.scrapper.utils.LinkType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dto.ContentDTO;
 import dto.UpdateType;
+import general.RetryException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.core.instrument.Timer;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -20,31 +26,34 @@ import org.springframework.web.client.RestClientResponseException;
 @Component
 @Slf4j
 public class StackOverflowClient {
+    private static final String JSON_ERROR = "Ошибка при разборе JSON-Ответа";
+    private static final String REQUEST_ERROR = "Ошибка при запросе";
     private final ConvertLinkToApiUtils convertLinkToApiUtils;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
-
     private final String key;
     private final String access_token;
     private final String filter;
-
-    private static final String JSON_ERROR = "Ошибка при разборе JSON-Ответа";
-    private static final String REQUEST_ERROR = "Ошибка при запросе";
+    private final LinkTimeMetric linkTimeMetric;
 
     public StackOverflowClient(
             ScrapperConfig scrapperConfig,
             ConvertLinkToApiUtils convertLinkToApiUtils,
             ObjectMapper objectMapper,
-            @Qualifier("default") RestClient restClient) {
+            @Qualifier("default") RestClient restClient,
+            LinkTimeMetric linkTimeMetric) {
         this.convertLinkToApiUtils = convertLinkToApiUtils;
         this.objectMapper = objectMapper;
 
         this.key = scrapperConfig.stackOverflow().key();
         this.access_token = scrapperConfig.stackOverflow().accessToken();
+        this.linkTimeMetric = linkTimeMetric;
         this.filter = "withbody";
         this.restClient = restClient;
     }
 
+    @Retry(name = "defaultRetry")
+    @CircuitBreaker(name = "baseCircuitBreaker")
     private String performRequest(String url) {
         url += "&key=" + key + "&access_token=" + access_token + "&filter=" + filter;
 
@@ -52,7 +61,7 @@ public class StackOverflowClient {
             return restClient.get().uri(url).retrieve().body(String.class);
         } catch (RestClientResponseException e) {
             log.atError().addKeyValue("link", url).setMessage(REQUEST_ERROR).log();
-            throw new QuestionNotFoundException("Ошибка при запросе: " + url);
+            throw new RetryException(String.valueOf(e.getStatusCode().value()));
         }
     }
 
@@ -126,6 +135,7 @@ public class StackOverflowClient {
     }
 
     public List<ContentDTO> getSOContent(String link) {
+        Timer.Sample sample = Timer.start(linkTimeMetric.registry());
         String title = getTitle(link);
 
         List<ContentDTO> contentDTOS = new ArrayList<>();
@@ -133,6 +143,7 @@ public class StackOverflowClient {
         contentDTOS.addAll(getAnswers(link, title));
         contentDTOS.addAll(getAnswerComments(link, title));
 
+        sample.stop(linkTimeMetric.getTimer(LinkType.STACKOVERFLOW));
         return contentDTOS;
     }
 }

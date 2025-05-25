@@ -60,19 +60,6 @@ public class LinkRepositorySQL {
         template.update(createSql, parameterSource);
     }
 
-    //    public Link getLinkByUsersIdAndEmptyUrl(Long usersId) {
-    //        String getLinkSql = """
-    //            select * from scrapper.link where users_id = (:usersId) and url_id is null""";
-    //
-    //        SqlParameterSource parameterSource = new MapSqlParameterSource("usersId", usersId);
-    //
-    //        try {
-    //            return template.query(getLinkSql, parameterSource, linkRowMapper).getFirst();
-    //        } catch (EmptyResultDataAccessException e) {
-    //            return null;
-    //        }
-    //    }
-
     public void updateLinkUrl(Long userId, Long urlId) {
         String updateLinkSql = """
             update scrapper.link set url_id = (:urlId) where user_id = (:userId)""";
@@ -88,7 +75,7 @@ public class LinkRepositorySQL {
                 """
             delete from scrapper.link
             where user_id = (select chat_id from scrapper.user where chat_id = :chatId)
-            and url_id = (select url_id from scrapper.url where url = :link)""";
+            and url_id = (select id from scrapper.url where url = :link)""";
 
         SqlParameterSource parameterSource =
                 new MapSqlParameterSource().addValue("chatId", chatId).addValue("link", link);
@@ -129,5 +116,18 @@ public class LinkRepositorySQL {
     public List<Link> findAll() {
         String findAllSql = "select * from scrapper.link";
         return template.query(findAllSql, linkRowMapper);
+    }
+
+    public List<Link> findAllByUrlLinkType(String linkType) {
+        String findAllByLinkTypeSql =
+                """
+            select * from scrapper.link l
+            where url_id in (select u.id from scrapper.url u
+            where u.link_type = :linkType)
+            """;
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("linkType", linkType);
+
+        return template.query(findAllByLinkTypeSql, sqlParameterSource, linkRowMapper);
     }
 }

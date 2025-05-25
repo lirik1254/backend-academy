@@ -1,8 +1,9 @@
 package dto;
 
+import java.io.Serializable;
 import java.util.List;
 
-public record LinkResponseDTO(int id, String url, List<String> tags, List<String> filters) {
+public record LinkResponseDTO(int id, String url, List<String> tags, List<String> filters) implements Serializable {
 
     @Override
     public String toString() {

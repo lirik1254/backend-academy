@@ -3,9 +3,51 @@ app:
   stackoverflow:
     key: ${SO_TOKEN_KEY}
     access-token: ${SO_ACCESS_TOKEN}
-  base-url: http://localhost:8080
-  access-type: SQL
+  base-url: http://bot:8080
+  access-type: ORM
   batch-size: 1000
+  message-transport: HTTP
+  topic: update-topic
+  ai:
+    model-name: deepseek-ai/DeepSeek-V3
+    base-url: https://api.hyperbolic.xyz/v1/
+    api-key: ${HYPERBOLIC_API_KEY}
+  connection-timeout: 1000ms
+  read-timeout: 1500ms
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      baseCircuitBreaker:
+        # Успешные и неуспешные запросы будут учитываться в скользящем окне.
+        # Размер скользящего окна — 20 запросов.
+        # Если в скользящем окне будет 50% неуспешных запросов, circuit breaker перейдет в открытое состояние.
+        # Через 10 секунд circuit breaker перейдет в полуоткрытое состояние
+        # и попробует выполнить 2 запросов.
+        # Если будет успешный ответ, circuit breaker перейдет в закрытое состояние, иначе — в открытое.
+        #
+        # Существует возможность настраивать скользящее окно на основе времени.
+        # А также трактоваться медленные запросы как неудачные
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 20
+        slidingWindowSize: 20
+        failureRateThreshold: 50 # процентов
+        waitDurationInOpenState: 5s # 5 секунд
+        permittedNumberOfCallsInHalfOpenState: 2
+  retry:
+    instances:
+      defaultRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        enable-exponential-backoff: true
+        retryable-status-pattern: "5\\d{2}|429"
+  ratelimiter:
+    configs:
+      defaultConfig:
+        limit-for-period: 3
+        timeout-duration: 0s
+        limit-refresh-period: 5s
 
 spring:
   application:
@@ -13,7 +55,7 @@ spring:
   liquibase:
     enabled: false
   datasource:
-    url: jdbc:postgresql://localhost:5432/linkTrackerDB  # Укажи имя базы данных
+    url: jdbc:postgresql://db:5432/linkTrackerDB  # Укажи имя базы данных
     username: ${DB_USERNAME}     # Имя пользователя для подключения
     password: ${DB_PASSWORD}                                  # Пароль для подключения
     driver-class-name: org.postgresql.Driver                  # Класс драйвера PostgreSQL
@@ -26,12 +68,21 @@ spring:
         format_sql: true
         show_sql: true
         default_schema: scrapper
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: kafka1:19092
+  cache:
+    type: redis
+  data:
+    redis:
+      host: redis-ab
+      port: 6379
 
 springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui
-
+#
 #logging:
 #  structured:
 #    format:
@@ -39,3 +90,19 @@ springdoc:
 
 server:
   port: 8081
+
+management:
+  server:
+    port: 9401
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        prometheus: metrics
+      exposure:
+        include: health,info,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import backend.academy.bot.BaseConfigure;
 import backend.academy.bot.services.TelegramBotService;
 import backend.academy.bot.services.messages.State;
 import backend.academy.bot.services.messages.TrackCommand;
@@ -124,7 +125,7 @@ public class TrackCommandTests extends BaseConfigure {
         SendMessage sentMessage = captor.getValue();
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
         assertEquals(
-                "Введите фильтры (опционально, например, user:dummy)\nЕсли фильтры не нужны - введите /skip",
+                "Введите фильтры (опционально, например, user=dummy)\n" + "Если фильтры не нужны - введите /skip",
                 sentMessage.getParameters().get("text"));
         assertEquals(new HashMap<>(Map.of(123L, State.WAITING_FOR_FILTERS)), trackCommand.userStates());
     }
@@ -145,7 +146,7 @@ public class TrackCommandTests extends BaseConfigure {
         SendMessage sentMessage = captor.getValue();
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
         assertEquals(
-                "Введите фильтры (опционально, например, user:dummy)\nЕсли фильтры не нужны - введите /skip",
+                "Введите фильтры (опционально, например, user=dummy)\n" + "Если фильтры не нужны - введите /skip",
                 sentMessage.getParameters().get("text"));
         assertEquals(new HashMap<>(Map.of(123L, State.WAITING_FOR_FILTERS)), trackCommand.userStates());
     }
@@ -166,7 +167,7 @@ public class TrackCommandTests extends BaseConfigure {
 
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
         assertEquals(
-                "Введите фильтры в формате filter:filter",
+                "Введите фильтры в формате user=username",
                 sentMessage.getParameters().get("text"));
         assertEquals(new HashMap<>(Map.of(123L, State.WAITING_FOR_FILTERS)), trackCommand.userStates());
     }
@@ -180,7 +181,7 @@ public class TrackCommandTests extends BaseConfigure {
               "id": 123,
               "url": "https://github.com/lirik1254/abTestRepo",
               "tags": [],
-              "filters": ["filter:filter"]
+              "filters": ["user=filter"]
             }""";
 
         wireMockServer.stubFor(post(urlEqualTo("/links"))
@@ -191,7 +192,7 @@ public class TrackCommandTests extends BaseConfigure {
                         .withHeader("Content-Type", "application/json")
                         .withBody(jsonAnswer)));
 
-        when(message.text()).thenReturn("filter:filter");
+        when(message.text()).thenReturn("user=filter");
         ReflectionTestUtils.setField(
                 trackCommand, "userStates", new HashMap<>(Map.of(123L, State.WAITING_FOR_FILTERS)));
         ReflectionTestUtils.setField(
@@ -326,8 +327,7 @@ public class TrackCommandTests extends BaseConfigure {
         SendMessage sentMessage = captor.getValue();
 
         assertEquals(123L, sentMessage.getParameters().get("chat_id"));
-        assertEquals(
-                "Некорректные параметры запроса52", sentMessage.getParameters().get("text"));
+        assertEquals("Ошибка", sentMessage.getParameters().get("text"));
         assertEquals(new HashMap<>(Map.of(123L, State.START)), trackCommand.userStates());
     }
 }

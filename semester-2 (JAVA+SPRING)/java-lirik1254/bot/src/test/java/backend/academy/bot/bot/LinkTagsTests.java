@@ -9,6 +9,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import backend.academy.bot.BaseConfigure;
 import backend.academy.bot.services.TelegramBotService;
 import backend.academy.bot.services.messages.LinkTagsCommand;
 import backend.academy.bot.services.messages.State;
@@ -164,7 +165,7 @@ public class LinkTagsTests extends BaseConfigure {
                     55пиидисяя тдвааа
                 }""";
 
-        String returnAnswer = "Ошибка";
+        String returnAnswer = "Не удалось получить список отслеживаемых ссылок";
 
         wireMockServer.stubFor(post(urlEqualTo("/link-tags/123"))
                 .withRequestBody(equalToJson("[\"mysadf\"]"))

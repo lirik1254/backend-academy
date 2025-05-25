@@ -10,13 +10,14 @@ import backend.academy.scrapper.entities.SQL.LinkTags;
 import backend.academy.scrapper.entities.SQL.Url;
 import backend.academy.scrapper.entities.SQL.User;
 import backend.academy.scrapper.exceptions.LinkNotFoundException;
+import backend.academy.scrapper.micrometer.link.count.LinkCountMetric;
 import backend.academy.scrapper.repositories.SQL.ContentRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.FilterRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.LinkRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.TagRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.UrlRepositorySQL;
 import backend.academy.scrapper.repositories.SQL.UsersRepositorySQL;
-import backend.academy.scrapper.services.LinkService;
+import backend.academy.scrapper.services.interfaces.LinkService;
 import backend.academy.scrapper.utils.LinkType;
 import backend.academy.scrapper.utils.SQL.LinkUtils;
 import dto.AddLinkDTO;
@@ -48,6 +49,8 @@ public class LinkServiceSQL implements LinkService {
     private final UrlRepositorySQL urlRepositorySQL;
     private final RegexCheck regexCheck;
     private final LinkUtils linkUtils;
+    private final LinkCountMetric linkCountMetric;
+    private final RegistrationServiceSQL registrationServiceSQL;
 
     @Override
     @Transactional
@@ -63,7 +66,7 @@ public class LinkServiceSQL implements LinkService {
 
         User user = usersRepositorySQL.getByChatId(chatId);
         if (user == null) {
-            usersRepositorySQL.createUser(chatId);
+            registrationServiceSQL.registerUser(chatId);
             user = usersRepositorySQL.getByChatId(chatId);
         }
 

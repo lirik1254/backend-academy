@@ -1,6 +1,6 @@
 package backend.academy.scrapper.controllers;
 
-import backend.academy.scrapper.services.TagLinksService;
+import backend.academy.scrapper.services.interfaces.TagLinksService;
 import dto.ListLinksResponseDTO;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/link-tags/{chatId}")
+@RequestMapping(value = "/link-tags/{chatId}", produces = "application/json")
 @RequiredArgsConstructor
 public class TagLinksController {
 

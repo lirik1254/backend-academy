@@ -1,6 +1,44 @@
 app:
   telegram-token: ${TELEGRAM_TOKEN}
-  base-url: http://localhost:8081 # env variable
+  base-url: http://scrapper:8081 # env variable
+  connection-timeout: 10000ms
+  read-timeout: 15000ms
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      baseCircuitBreaker:
+      # Успешные и неуспешные запросы будут учитываться в скользящем окне.
+      # Размер скользящего окна — 20 запросов.
+      # Если в скользящем окне будет 50% неуспешных запросов, circuit breaker перейдет в открытое состояние.
+      # Через 10 секунд circuit breaker перейдет в полуоткрытое состояние
+      # и попробует выполнить 2 запросов.
+      # Если будет успешный ответ, circuit breaker перейдет в закрытое состояние, иначе — в открытое.
+      #
+      # Существует возможность настраивать скользящее окно на основе времени.
+      # А также трактоваться медленные запросы как неудачные
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 20
+        slidingWindowSize: 20
+        failureRateThreshold: 50 # процентов
+        waitDurationInOpenState: 5s # 5 секунд
+        permittedNumberOfCallsInHalfOpenState: 2
+  retry:
+    instances:
+      defaultRetry:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        enable-exponential-backoff: true
+        retryable-status-pattern: "5\\d{2}|429"
+  ratelimiter:
+    configs:
+      defaultConfig:
+        limit-for-period: 3
+        timeout-duration: 0s
+        limit-refresh-period: 5s
+
+
 
 spring:
   application:
@@ -11,6 +49,8 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  kafka:
+    bootstrap-servers: kafka1:19092
 
 server:
   port: 8080
@@ -20,7 +60,23 @@ springdoc:
     enabled: true
     path: /swagger-ui
 
-logging:
-  structured:
-    format:
-      console: ecs
+management:
+  server:
+    port: 9400
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        prometheus: metrics
+      exposure:
+        include: health,info,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+#logging:
+#  structured:
+#    format:
+#      console: ecs
+

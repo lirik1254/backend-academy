@@ -3,8 +3,11 @@ package backend.academy.bot.clients;
 import static general.LogMessages.CHAT_ID_STRING;
 import static general.LogMessages.STATUS;
 
-import backend.academy.bot.BotConfig;
+import backend.academy.bot.config.BotConfig;
 import dto.ApiErrorResponseDTO;
+import general.RetryException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -22,37 +25,36 @@ public class RegistrationClient {
         this.restClient = restClient;
     }
 
+    @Retry(name = "defaultRetry")
+    @CircuitBreaker(name = "baseCircuitBreaker")
     public String registerUser(Long chatId) {
-        try {
-            return restClient.post().uri("/tg-chat/{id}", chatId).exchange((request, response) -> {
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    log.atInfo()
+        return restClient.post().uri("/tg-chat/{id}", chatId).exchange((request, response) -> {
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.atInfo()
+                        .addKeyValue(CHAT_ID_STRING, chatId)
+                        .setMessage(CHAT_REGISTERED)
+                        .log();
+                return CHAT_REGISTERED;
+            } else {
+                ApiErrorResponseDTO error = response.bodyTo(ApiErrorResponseDTO.class);
+                if (error != null) {
+                    log.atError()
                             .addKeyValue(CHAT_ID_STRING, chatId)
-                            .setMessage(CHAT_REGISTERED)
+                            .addKeyValue(STATUS, response.getStatusCode())
+                            .addKeyValue("description", error.description())
+                            .setMessage("Не удалось зарегистрировать чат")
                             .log();
-                    return CHAT_REGISTERED;
+                    return error.description();
                 } else {
-                    ApiErrorResponseDTO error = response.bodyTo(ApiErrorResponseDTO.class);
-                    if (error != null) {
-                        log.atError()
-                                .addKeyValue(CHAT_ID_STRING, chatId)
-                                .addKeyValue(STATUS, response.getStatusCode())
-                                .addKeyValue("description", error.description())
-                                .setMessage("Не удалось зарегистрировать чат")
-                                .log();
-                        return error.description();
-                    } else {
-                        log.atError()
-                                .addKeyValue(CHAT_ID_STRING, chatId)
-                                .addKeyValue(STATUS, response.getStatusCode())
-                                .setMessage("Не удалось зарегистрировать чат - Не удалось прочитать тело ответа")
-                                .log();
-                        return "Ошибка";
-                    }
+                    log.atError()
+                            .addKeyValue(CHAT_ID_STRING, chatId)
+                            .addKeyValue(STATUS, response.getStatusCode())
+                            .setMessage("Не удалось зарегистрировать чат - Не удалось прочитать тело ответа")
+                            .log();
+                    throw new RetryException(
+                            String.valueOf(response.getStatusCode().value()));
                 }
-            });
-        } catch (Exception e) {
-            return "Ошибка";
-        }
+            }
+        });
     }
 }

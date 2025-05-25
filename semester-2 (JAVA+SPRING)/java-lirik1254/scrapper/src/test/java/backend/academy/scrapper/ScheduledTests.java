@@ -10,11 +10,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import backend.academy.scrapper.clients.GitHubInfoClient;
-import backend.academy.scrapper.clients.UpdateLinkClient;
+import backend.academy.scrapper.clients.update.UpdateLinkClientHTTP;
 import backend.academy.scrapper.entities.JPA.Url;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
 import backend.academy.scrapper.services.LinkCheckService;
-import backend.academy.scrapper.services.UpdateChecker;
+import backend.academy.scrapper.services.interfaces.UpdateChecker;
 import backend.academy.scrapper.utils.ORM.UpdateCheckerUtilsORM;
 import dto.AddLinkDTO;
 import dto.ContentDTO;
@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -40,16 +41,20 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @Testcontainers
-public class ScheduledTests extends dbInitializeBase {
+public class ScheduledTests extends ExternalInitBase {
 
     @MockitoBean
     public GitHubInfoClient gitHubInfoClient;
 
     @MockitoBean
-    public UpdateLinkClient updateLinkClient;
+    public UpdateLinkClientHTTP updateLinkClientHTTP;
 
     @MockitoBean
     public LinkCheckService linkCheckService;
@@ -66,6 +71,7 @@ public class ScheduledTests extends dbInitializeBase {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("app.access-type", () -> "ORM");
+        registry.add("app.message-transport", () -> "HTTP");
     }
 
     String firstUserGithubLink = "https://github.com/lirik1254/abTestRepo";
@@ -89,7 +95,7 @@ public class ScheduledTests extends dbInitializeBase {
         }
 
         List<String> tags = List.of("tag1", "tag2");
-        List<String> filters = List.of("filter1");
+        List<String> filters = List.of("user=52");
 
         AddLinkDTO firstRequest = new AddLinkDTO(firstUserGithubLink, tags, filters);
         AddLinkDTO secondRequest = new AddLinkDTO(secondUserGithubLink, tags, filters);
@@ -125,6 +131,7 @@ public class ScheduledTests extends dbInitializeBase {
 
     @Test
     @DisplayName("Обновления отправляются в разных потоках")
+    @DirtiesContext
     public void test2() throws Exception {
         doNothing().when(updateCheckerUtilsORM).processUrlPage(any());
 
@@ -148,19 +155,21 @@ public class ScheduledTests extends dbInitializeBase {
 
     @Test
     @DisplayName("Обновления отправляются только пользователям, которые следят за ссылкой")
+    @DirtiesContext
     public void test1() throws Exception {
-        doNothing().when(updateLinkClient).sendUpdate(any(), any(), any());
+        doNothing().when(updateLinkClientHTTP).sendUpdate(any(), any(), any());
 
         updateChecker.checkUpdates();
 
         // 1 пользователю отправляется обновление с 1 ссылкой
-        Mockito.verify(updateLinkClient, timeout(1000)).sendUpdate(123L, firstUserGithubLink, firstRequestNewContent);
+        Mockito.verify(updateLinkClientHTTP, timeout(1000))
+                .sendUpdate(123L, firstUserGithubLink, firstRequestNewContent);
 
         // 2 пользователю со 2 ссылкой
-        Mockito.verify(updateLinkClient, timeout(1000))
+        Mockito.verify(updateLinkClientHTTP, timeout(1000))
                 .sendUpdate(5252L, secondUserGithubLink, secondRequestNewContent);
 
         // 5050L который не подписывался на ссылки, ничего не отправляется
-        Mockito.verify(updateLinkClient, times(0)).sendUpdate(eq(5050L), anyString(), any());
+        Mockito.verify(updateLinkClientHTTP, times(0)).sendUpdate(eq(5050L), anyString(), any());
     }
 }

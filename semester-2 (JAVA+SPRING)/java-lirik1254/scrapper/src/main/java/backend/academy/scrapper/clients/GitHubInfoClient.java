@@ -1,14 +1,21 @@
 package backend.academy.scrapper.clients;
 
-import backend.academy.scrapper.ScrapperConfig;
+import backend.academy.scrapper.config.ScrapperConfig;
 import backend.academy.scrapper.exceptions.RepositoryNotFoundException;
+import backend.academy.scrapper.micrometer.link.time.LinkTimeMetric;
 import backend.academy.scrapper.utils.ConvertLinkToApiUtils;
+import backend.academy.scrapper.utils.LinkType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dto.ContentDTO;
 import dto.UpdateType;
+import general.RetryException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.core.instrument.Timer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,20 +31,27 @@ public class GitHubInfoClient {
     private final ConvertLinkToApiUtils convertLinkToApiUtils;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
+    private final LinkTimeMetric linkTimeMetric;
 
     public GitHubInfoClient(
             ScrapperConfig scrapperConfig,
             ConvertLinkToApiUtils convertLinkToApiUtils,
             ObjectMapper objectMapper,
-            @Qualifier("default") RestClient restClient) {
+            @Qualifier("default") RestClient restClient,
+            LinkTimeMetric linkTimeMetric) {
         this.scrapperConfig = scrapperConfig;
         this.convertLinkToApiUtils = convertLinkToApiUtils;
         this.objectMapper = objectMapper;
         this.restClient = restClient;
+        this.linkTimeMetric = linkTimeMetric;
     }
 
+    @Retry(name = "defaultRetry")
+    @CircuitBreaker(name = "baseCircuitBreaker")
     public List<ContentDTO> getGithubContent(String link)
             throws RepositoryNotFoundException, HttpMessageNotReadableException {
+
+        Timer.Sample sample = Timer.start(linkTimeMetric.registry());
         String response = "";
         try {
             response = restClient
@@ -52,7 +66,7 @@ public class GitHubInfoClient {
                     .addKeyValue("link", link)
                     .setMessage("Не удалось найти репозиторий")
                     .log();
-            throw new RepositoryNotFoundException("Репозиторий не найден");
+            throw new RetryException(String.valueOf(e.getStatusCode().value()));
         }
 
         try {
@@ -73,6 +87,7 @@ public class GitHubInfoClient {
                 }
             });
 
+            Collections.reverse(contentDTOS);
             return contentDTOS;
         } catch (HttpMessageNotReadableException | JsonProcessingException e) {
             log.atError()
@@ -80,6 +95,8 @@ public class GitHubInfoClient {
                     .setMessage("Ошибка при получении github контента")
                     .log();
             throw new HttpMessageNotReadableException("Не удаётся прочитать поле 'updated_at'");
+        } finally {
+            sample.stop(linkTimeMetric.getTimer(LinkType.GITHUB));
         }
     }
 }

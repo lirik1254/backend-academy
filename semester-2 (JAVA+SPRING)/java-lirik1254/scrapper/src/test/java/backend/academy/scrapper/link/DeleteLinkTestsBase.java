@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
 import backend.academy.scrapper.clients.GitHubInfoClient;
-import backend.academy.scrapper.dbInitializeBase;
 import dto.AddLinkDTO;
 import dto.RemoveLinkRequest;
 import java.sql.Connection;
@@ -26,11 +26,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestConfig.class)
-public class DeleteLinkTestsBase extends dbInitializeBase {
+public class DeleteLinkTestsBase extends ExternalInitBase {
     @MockitoBean
     protected GitHubInfoClient gitHubInfoClient;
 

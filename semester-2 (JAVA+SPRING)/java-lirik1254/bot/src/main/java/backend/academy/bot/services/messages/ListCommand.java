@@ -20,7 +20,13 @@ public class ListCommand implements Command {
                 .addKeyValue("chatId", chatId)
                 .setMessage("Выполняется команда /list")
                 .log();
-        bot.execute(new SendMessage(chatId, trackClient.getTrackLinks(chatId)));
+        String retMessage = "";
+        try {
+            retMessage = trackClient.getTrackLinks(chatId);
+        } catch (Exception e) {
+            retMessage = "Ошибка";
+        }
+        bot.execute(new SendMessage(chatId, retMessage));
     }
 
     @Override

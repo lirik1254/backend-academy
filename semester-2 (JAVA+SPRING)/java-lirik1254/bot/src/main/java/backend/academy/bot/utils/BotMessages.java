@@ -31,7 +31,7 @@ public class BotMessages {
         <site> - ru.stackoverflow.com или stackoverflow.com
 
         Для ввода тегов - любые слова/символы через пробел
-        Для ввода фильтров - фильтры в формате filter:filter
+        Для ввода фильтров - фильтры в формате user=username
 
         /untrack - Прекращает отслеживание какой-либо ссылки
 

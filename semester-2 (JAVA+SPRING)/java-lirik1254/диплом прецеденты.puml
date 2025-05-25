@@ -1,0 +1,67 @@
+@startuml
+top to bottom direction
+actor Пользователь as User
+
+' Основные прецеденты
+rectangle "Функциональность системы" {
+  (Редактирование профиля) as UC4 #Khaki
+  (Просмотр участников) as UC5 #Khaki
+  (Просмотр проектов) as UC6 #Khaki
+  (Добавление проекта в избранное) as UC7 #Khaki
+  (Просмотр списка всех предлагаемых к покупке курсов) as UC8 #palegreen
+  (Прохождение курсов) as UC9 #palegreen
+  (Поиск) as UC10 #Khaki
+  (Посмотреть детальную информацию о курсе) as UC52 #palegreen
+  (Перейти на страницу записи на курс) as UC53 #palegreen
+  (Просмотр всех доступных курсов) as UC54 #palegreen
+
+  ' Специализированные прецеденты
+'  (Рекомендации проектов) as UC6a #LightSkyBlue
+  (Лайк проектов) as UC6b #Khaki
+  (Просмотр лайкнувших) as UC6c #Khaki
+  (Создание подборки для проектов) as UC7a #Khaki
+  (Фильтрация) as UC10a #Khaki
+  (Добавить проект в подборку) as 52 #Khaki
+  (Поиск проектов) as search_project #Khaki
+  (Поиск компаний) as search_companies #Khaki
+  (Поиск участников) as participants_search #Khaki
+  (Просмотр компаний) as watch_companies #Khaki
+
+  ' Обобщения
+  UC10 <|-- search_project
+  UC10 <|-- search_companies
+  UC10 <|-- participants_search
+
+'  UC6a <.. UC6 : includes
+  UC6 <.. UC6b : extends
+  search_project <.. UC6 : extends
+  search_project <.. UC7 : extends
+  UC6b <.. UC6c : extends
+  UC8 <.. UC52 : extends
+  UC52 <.. UC53 : extends
+  participants_search <.. UC5 : extends
+  search_companies <.. watch_companies : extends
+
+  UC7 <.. UC7a : extends
+  UC7 <.. 52 : extends
+  UC54 <.. UC9 : extends
+
+
+  UC10a <.. UC10 : includes
+}
+
+' Связи актера с прецедентами
+User -- UC4
+User -- UC8
+User -- UC54
+User -- UC10
+
+' Легенда цветов
+legend top left
+    |Цвет| Приоритет |
+    |<#palegreen>| Must|
+    |<#Khaki>| Should |
+    |<#LightSkyBlue>| Could |
+endlegend
+skinparam defaultFontSize 15
+@enduml

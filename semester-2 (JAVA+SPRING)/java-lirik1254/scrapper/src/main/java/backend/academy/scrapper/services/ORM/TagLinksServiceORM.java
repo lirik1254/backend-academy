@@ -2,7 +2,7 @@ package backend.academy.scrapper.services.ORM;
 
 import backend.academy.scrapper.entities.JPA.Link;
 import backend.academy.scrapper.repositories.ORM.LinkRepositoryORM;
-import backend.academy.scrapper.services.TagLinksService;
+import backend.academy.scrapper.services.interfaces.TagLinksService;
 import dto.LinkResponseDTO;
 import dto.ListLinksResponseDTO;
 import java.util.ArrayList;
@@ -27,12 +27,12 @@ public class TagLinksServiceORM implements TagLinksService {
                 .addKeyValue("access-type", "ORM")
                 .setMessage("Получение ссылок")
                 .log();
-        List<Link> retLinks = linkRepositoryORM.findByUser_ChatIdAndTagsIn(chatId, tags);
+        List<Link> retLinks = linkRepositoryORM.findByUser_ChatIdAndTags_Id_TagIn(chatId, tags);
 
         List<LinkResponseDTO> linkResponseDTOS = new ArrayList<>();
 
-        retLinks.forEach(link -> linkResponseDTOS.add(
-                new LinkResponseDTO(Math.toIntExact(link.hashCode()), link.url().url(), link.tags(), link.filters())));
+        retLinks.forEach(link -> linkResponseDTOS.add(new LinkResponseDTO(
+                Math.toIntExact(link.hashCode()), link.url().url(), link.getTags(), link.getFilters())));
 
         return new ListLinksResponseDTO(linkResponseDTOS, linkResponseDTOS.size());
     }

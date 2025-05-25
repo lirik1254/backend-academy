@@ -9,4 +9,11 @@
 
     <include relativeToChangelogFile="true" file="init.sql"/>
 
+    <changeSet id="create-user-settings" author="lirik1254">
+        <sqlFile
+            path="setting_table.sql"
+            relativeToChangelogFile="true"
+            splitStatements="false"/>
+    </changeSet>
+
 </databaseChangeLog>

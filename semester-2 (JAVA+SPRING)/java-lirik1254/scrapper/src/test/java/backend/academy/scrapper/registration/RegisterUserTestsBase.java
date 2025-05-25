@@ -2,8 +2,8 @@ package backend.academy.scrapper.registration;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
-import backend.academy.scrapper.dbInitializeBase;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -15,11 +15,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestConfig.class)
-public class RegisterUserTestsBase extends dbInitializeBase {
+public class RegisterUserTestsBase extends ExternalInitBase {
 
     @BeforeEach
     public void clearDatabase() {

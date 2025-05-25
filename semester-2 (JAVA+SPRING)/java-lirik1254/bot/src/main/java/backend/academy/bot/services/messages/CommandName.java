@@ -10,7 +10,9 @@ public enum CommandName {
     TRACK("/track"),
     UNTRACK("/untrack"),
     TAGS("/tags"),
-    LINKTAGS("/linktags");
+    LINKTAGS("/linktags"),
+    TIMESETTINGS("/timesettings"),
+    JOKE("/joke");
 
     private final String commandName;
 

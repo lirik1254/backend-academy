@@ -10,11 +10,12 @@ import backend.academy.scrapper.entities.JPA.LinkId;
 import backend.academy.scrapper.entities.JPA.Url;
 import backend.academy.scrapper.entities.JPA.User;
 import backend.academy.scrapper.exceptions.LinkNotFoundException;
+import backend.academy.scrapper.micrometer.link.count.LinkCountMetric;
 import backend.academy.scrapper.repositories.ORM.ContentRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.LinkRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UsersRepositoryORM;
-import backend.academy.scrapper.services.LinkService;
+import backend.academy.scrapper.services.interfaces.LinkService;
 import backend.academy.scrapper.utils.LinkType;
 import dto.AddLinkDTO;
 import dto.ContentDTO;
@@ -45,6 +46,7 @@ public class LinkServiceORM implements LinkService {
     private final UrlRepositoryORM urlRepositoryORM;
     private final RegistrationServiceORM registrationServiceORM;
     private final ContentRepositoryORM contentRepositoryORM;
+    private final LinkCountMetric linkCountMetric;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -71,25 +73,29 @@ public class LinkServiceORM implements LinkService {
 
         Link addLink;
         if (!user.links().stream()
-                .filter(user_link -> user_link.url().url().equals(link))
+                .filter(userLink -> userLink.url().url().equals(link))
                 .toList()
                 .isEmpty()) {
             List<Link> existingLinks = linkRepositoryORM.findByUrlAndChatId(link, chatId);
             addLink = existingLinks.getFirst();
-            addLink.filters(filters);
-            addLink.tags(tags);
+            addLink.clearFilters();
+            addLink.clearTags();
+            linkRepositoryORM.save(addLink);
+            addLink.addFilter(filters);
+            addLink.addTag(tags);
             linkRepositoryORM.save(addLink);
         } else {
             addLink = new Link();
 
-            urlCreate(link, addLink, linkType, user, addRequest);
+            urlCreate(link, addLink, linkType, user, filters, tags);
         }
 
         return new LinkResponseDTO(
-                Math.toIntExact(addLink.id().hashCode()), addLink.url().url(), addLink.tags(), addLink.filters());
+                Math.toIntExact(addLink.id().hashCode()), addLink.url().url(), addLink.getTags(), addLink.getFilters());
     }
 
-    private void urlCreate(String link, Link addLink, LinkType linkType, User user, AddLinkDTO addLinkDTO) {
+    private void urlCreate(
+            String link, Link addLink, LinkType linkType, User user, List<String> filters, List<String> tags) {
         log.atInfo()
                 .addKeyValue("link", link)
                 .addKeyValue("access-type", "ORM")
@@ -122,8 +128,8 @@ public class LinkServiceORM implements LinkService {
         addLink.id(linkId);
         entityManager.clear();
         linkRepositoryORM.save(addLink);
-        addLink.filters(addLinkDTO.filters());
-        addLink.tags(addLinkDTO.tags());
+        addLink.addFilter(filters);
+        addLink.addTag(tags);
         linkRepositoryORM.save(addLink);
     }
 
@@ -154,8 +160,8 @@ public class LinkServiceORM implements LinkService {
             return new LinkResponseDTO(
                     Math.toIntExact(getLinkToDelete.id().hashCode()),
                     link,
-                    getLinkToDelete.tags(),
-                    getLinkToDelete.filters());
+                    getLinkToDelete.getTags(),
+                    getLinkToDelete.getFilters());
         } else {
             throw new LinkNotFoundException(LINK_NOT_FOUND);
         }
@@ -172,7 +178,11 @@ public class LinkServiceORM implements LinkService {
         List<LinkResponseDTO> linkResponseDTOS = new ArrayList<>();
 
         links.forEach(link -> linkResponseDTOS.add(new LinkResponseDTO(
-                Math.toIntExact(link.id().hashCode()), link.url().url(), link.tags(), link.filters())));
+                Math.toIntExact(
+                        link.id().urlId().hashCode() + link.id().userId().hashCode()),
+                link.url().url(),
+                link.getTags(),
+                link.getFilters())));
 
         return new ListLinksResponseDTO(linkResponseDTOS, linkResponseDTOS.size());
     }

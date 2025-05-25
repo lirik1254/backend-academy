@@ -3,7 +3,7 @@ package backend.academy.bot.services;
 import static general.LogMessages.CHAT_ID_STRING;
 import static general.LogMessages.URL;
 
-import backend.academy.bot.BotConfig;
+import backend.academy.bot.config.BotConfig;
 import backend.academy.bot.utils.UpdateServiceUtils;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;

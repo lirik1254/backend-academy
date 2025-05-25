@@ -12,13 +12,13 @@ public class FilterParseTest {
     @Test
     @DisplayName("Тестирует парсинг фильтров")
     public void parseFilterTest() {
-        String filterWithoutColon = "MyFilter";
-        String filterWithSpaces = "   MyFilter:Filter  ";
-        String moreThanOneFilterNoColon = "Myfilter:Filter filter&filter";
-        String filtersWithComma = "filter:filter, filter:comma";
+        String filterWithoutColon = "user";
+        String filterWithSpaces = "   user=Filter  ";
+        String moreThanOneFilterNoColon = "user=Filter user&filter";
+        String filtersWithComma = "user=user, user=comma";
 
-        String oneCorrectFilter = "filter:filter";
-        String moreThanOneCorrectFilter = "filter:filter correctfilter:FILTER52";
+        String oneCorrectFilter = "user=lirik1254";
+        String moreThanOneCorrectFilter = "user=lirik1254 user=FILTER52";
 
         assertFalse(regexCheck.checkFilter(filterWithoutColon));
         assertFalse(regexCheck.checkFilter(filterWithSpaces));

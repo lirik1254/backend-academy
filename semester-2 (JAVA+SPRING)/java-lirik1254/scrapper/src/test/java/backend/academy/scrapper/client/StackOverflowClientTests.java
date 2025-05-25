@@ -23,9 +23,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
 import backend.academy.scrapper.clients.StackOverflowClient;
-import backend.academy.scrapper.dbInitializeBase;
 import backend.academy.scrapper.exceptions.QuestionNotFoundException;
 import backend.academy.scrapper.utils.ConvertLinkToApiUtils;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -33,6 +33,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import dto.ContentDTO;
 import dto.UpdateType;
+import general.RetryException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterAll;
@@ -47,11 +48,15 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @RequiredArgsConstructor
 @Import(TestConfig.class)
 @DisplayName("Тестирование StackOverflow клиента")
-public class StackOverflowClientTests extends dbInitializeBase {
+public class StackOverflowClientTests extends ExternalInitBase {
     protected static WireMockServer wireMockServer;
 
     @BeforeAll
@@ -122,19 +127,16 @@ public class StackOverflowClientTests extends dbInitializeBase {
     @Test
     @DisplayName("Тестирование получения заголовка - ответ 400 от SO")
     public void test1() {
-        String exceptionMessage = "Ошибка при запросе: http://localhost:8080/stackoverflow/questions/"
-                + "52?site=ru.stackoverflow.com&key=test&access_token=test&filter=withbody";
-
         wireMockServer.stubFor(get(urlEqualTo(WIREMOCK_SO_TO_QUESTION_LINK))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(400)
                         .withBody("bad request")));
 
-        QuestionNotFoundException questionNotFoundException =
-                assertThrows(QuestionNotFoundException.class, () -> stackOverflowClient.getTitle(SO_TO_QUESTION_LINK));
+        RetryException retryException =
+                assertThrows(RetryException.class, () -> stackOverflowClient.getTitle(SO_TO_QUESTION_LINK));
 
-        assertEquals(exceptionMessage, questionNotFoundException.getMessage());
+        assertEquals("400", retryException.getMessage());
     }
 
     @Test
@@ -171,21 +173,18 @@ public class StackOverflowClientTests extends dbInitializeBase {
     @Test
     @DisplayName("Получение комментариев - ответ 400")
     public void test54() {
-        String exceptionMessage = "Ошибка при запросе: http://localhost:8080/stackoverflow/questions/52/"
-                + "comments?site=ru.stackoverflow.com&key=test&access_token=test&filter=withbody";
-
         wireMockServer.stubFor(get(urlEqualTo(WIREMOCK_SO_TO_QUESTION_COMMENTS_LINK))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(400)
                         .withBody("Bad Request")));
 
-        QuestionNotFoundException questionNotFoundException = assertThrows(
-                QuestionNotFoundException.class,
+        RetryException retryException = assertThrows(
+                RetryException.class,
                 () -> ReflectionTestUtils.invokeMethod(
                         stackOverflowClient, "getComments", SO_TO_QUESTION_COMMENTS_LINK, "52"));
 
-        assertEquals(exceptionMessage, questionNotFoundException.getMessage());
+        assertEquals("400", retryException.getMessage());
     }
 
     @Test
@@ -224,21 +223,18 @@ public class StackOverflowClientTests extends dbInitializeBase {
     @Test
     @DisplayName("Получение ответа - 400 ошибка")
     public void test3() {
-        String exceptionMessage = "Ошибка при запросе: http://localhost:8080/stackoverflow/questions/"
-                + "52/answers?site=ru.stackoverflow.com&key=test&access_token=test&filter=withbody";
-
         wireMockServer.stubFor(get(urlEqualTo(WIREMOCK_SO_TO_QUESTION_ANSWERS_LINK))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withStatus(400)
                         .withBody("Bad Request")));
 
-        QuestionNotFoundException questionNotFoundException = assertThrows(
-                QuestionNotFoundException.class,
+        RetryException questionNotFoundException = assertThrows(
+                RetryException.class,
                 () -> ReflectionTestUtils.invokeMethod(
                         stackOverflowClient, "getAnswers", SO_TO_QUESTION_ANSWERS, "52"));
 
-        assertEquals(exceptionMessage, questionNotFoundException.getMessage());
+        assertEquals("400", questionNotFoundException.getMessage());
     }
 
     @Test
@@ -279,9 +275,6 @@ public class StackOverflowClientTests extends dbInitializeBase {
     @Test
     @DisplayName("Получение комментариев по всем ответам - 400 ошибка")
     public void test30() {
-        String exceptionMessage = "Ошибка при запросе: http://localhost:8080/stackoverflow/answers"
-                + "/52/comments?site=ru.stackoverflow.com&key=test&access_token=test&filter=withbody";
-
         wireMockServer.stubFor(get(urlEqualTo(WIREMOCK_SO_TO_ANSWER_COMMENTS_52))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
@@ -293,7 +286,7 @@ public class StackOverflowClientTests extends dbInitializeBase {
                 () -> ReflectionTestUtils.invokeMethod(
                         stackOverflowClient, "getAnswerComments", SO_TO_ANSWER_COMMENTS_52, "52"));
 
-        assertEquals(exceptionMessage, questionNotFoundException.getMessage());
+        assertEquals("400", questionNotFoundException.getMessage());
     }
 
     @Test

@@ -1,6 +1,6 @@
 package backend.academy.scrapper.controllers;
 
-import backend.academy.scrapper.services.RegistrationService;
+import backend.academy.scrapper.services.interfaces.RegistrationService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;

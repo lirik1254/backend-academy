@@ -10,7 +10,7 @@ public class RegexCheck {
     private static final String STACKOVERFLOW_LINK_PATTERN =
             "^https://(ru\\.|)stackoverflow\\.com/questions/\\d{1,10}$";
 
-    private static final String FILTER_PATTERN = "^(\\w+:\\w+)(\\s+\\w+:\\w+)*\\s*$";
+    private static final String FILTER_PATTERN = "^user=[a-zA-Z0-9_-]{1,50}( user=[a-zA-Z0-9_-]{1,50})*$";
 
     private static final String GITHUB_LINK_PATTERN = "^https://github\\.com/[\\w-]{1,39}/[\\w-]{1,39}$";
 

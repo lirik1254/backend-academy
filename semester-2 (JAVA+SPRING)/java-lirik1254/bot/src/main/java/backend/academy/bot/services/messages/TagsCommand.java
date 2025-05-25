@@ -20,7 +20,13 @@ public class TagsCommand implements Command {
                 .addKeyValue("chatId", chatId)
                 .setMessage("Выполняется команда /tags")
                 .log();
-        telegramBot.execute(new SendMessage(chatId, tagsClient.getAllTags(chatId)));
+        String retMessage = "";
+        try {
+            retMessage = tagsClient.getAllTags(chatId);
+        } catch (Exception e) {
+            retMessage = "Ошибка";
+        }
+        telegramBot.execute(new SendMessage(chatId, retMessage));
     }
 
     @Override

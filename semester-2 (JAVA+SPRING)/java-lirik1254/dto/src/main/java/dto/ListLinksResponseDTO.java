@@ -1,8 +1,9 @@
 package dto;
 
+import java.io.Serializable;
 import java.util.List;
 
-public record ListLinksResponseDTO(List<LinkResponseDTO> links, int size) {
+public record ListLinksResponseDTO(List<LinkResponseDTO> links, int size) implements Serializable {
     @Override
     public String toString() {
         if (size == 0) {

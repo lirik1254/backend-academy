@@ -2,7 +2,7 @@ package backend.academy.scrapper.services.SQL;
 
 import backend.academy.scrapper.entities.SQL.Link;
 import backend.academy.scrapper.repositories.SQL.LinkRepositorySQL;
-import backend.academy.scrapper.services.TagLinksService;
+import backend.academy.scrapper.services.interfaces.TagLinksService;
 import backend.academy.scrapper.utils.SQL.LinkUtils;
 import dto.ListLinksResponseDTO;
 import java.util.List;

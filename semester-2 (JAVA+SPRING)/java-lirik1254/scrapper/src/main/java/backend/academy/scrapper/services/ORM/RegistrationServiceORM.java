@@ -5,13 +5,16 @@ import static backend.academy.scrapper.utils.ExceptionMessages.CHAT_NOT_FOUND;
 import backend.academy.scrapper.entities.JPA.Link;
 import backend.academy.scrapper.entities.JPA.Url;
 import backend.academy.scrapper.entities.JPA.User;
+import backend.academy.scrapper.entities.JPA.UserSettings;
 import backend.academy.scrapper.exceptions.ChatNotFoundException;
 import backend.academy.scrapper.repositories.ORM.UrlRepositoryORM;
+import backend.academy.scrapper.repositories.ORM.UserSettingsRepositoryORM;
 import backend.academy.scrapper.repositories.ORM.UsersRepositoryORM;
-import backend.academy.scrapper.services.RegistrationService;
+import backend.academy.scrapper.services.interfaces.RegistrationService;
+import dto.Settings;
 import jakarta.transaction.Transactional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class RegistrationServiceORM implements RegistrationService {
     private final UsersRepositoryORM usersRepositoryORM;
     private final UrlRepositoryORM urlRepositoryORM;
+    private final UserSettingsRepositoryORM userSettingsRepositoryORM;
 
     @Override
     @Transactional
@@ -36,7 +40,15 @@ public class RegistrationServiceORM implements RegistrationService {
         if (!usersRepositoryORM.existsByChatId(chatId)) {
             User user = new User();
             user.chatId(chatId);
-            usersRepositoryORM.saveAndFlush(user);
+
+            UserSettings userSettings = new UserSettings();
+            userSettings.notifyTime(null);
+            userSettings.notifyMood(Settings.IMMEDIATELY);
+
+            user.userSettings(userSettings);
+            userSettings.user(user);
+
+            userSettingsRepositoryORM.save(userSettings);
         }
     }
 
@@ -53,15 +65,22 @@ public class RegistrationServiceORM implements RegistrationService {
             throw new ChatNotFoundException(CHAT_NOT_FOUND);
         }
 
-        Set<Url> affectedUrls = user.links().stream().map(Link::url).collect(Collectors.toSet());
+        List<Link> linksToDelete = new ArrayList<>(user.links());
 
-        //        user.delete();
-        usersRepositoryORM.delete(user);
+        linksToDelete.forEach(link -> {
+            link.tags().clear();
+            link.filters().clear();
 
-        affectedUrls.forEach(url -> {
-            if (url.links().isEmpty()) {
-                urlRepositoryORM.delete(url);
+            Url url = link.url();
+            if (url != null) {
+                url.links().remove(link);
+                if (url.links().isEmpty()) {
+                    url.contents().clear();
+                    urlRepositoryORM.delete(url);
+                }
             }
         });
+
+        usersRepositoryORM.delete(user);
     }
 }

@@ -6,9 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
-import backend.academy.scrapper.clients.UpdateLinkClient;
-import backend.academy.scrapper.dbInitializeBase;
+import backend.academy.scrapper.clients.update.UpdateLinkClientHTTP;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -28,18 +28,24 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @DisplayName("Тестирование клиента на /update")
 @Import(TestConfig.class)
-public class UpdateClientTests extends dbInitializeBase {
+public class UpdateClientTests extends ExternalInitBase {
     protected static WireMockServer wireMockServer;
 
     @Autowired
-    public UpdateLinkClient updateLinkClient;
+    public UpdateLinkClientHTTP updateLinkClientHTTP;
 
     @Autowired
     public ObjectMapper objectMapper;
@@ -52,6 +58,12 @@ public class UpdateClientTests extends dbInitializeBase {
         wireMockServer = new WireMockServer(WireMockConfiguration.options().port(8080));
         wireMockServer.start();
         WireMock.configureFor("localhost", 8080);
+        System.out.println(wireMockServer.isRunning());
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("app.message-transport", () -> "HTTP");
     }
 
     @AfterAll
@@ -72,7 +84,7 @@ public class UpdateClientTests extends dbInitializeBase {
                 .withRequestBody(equalToJson(objectMapper.writeValueAsString(updateDTO)))
                 .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")));
 
-        updateLinkClient.sendUpdate(
+        updateLinkClientHTTP.sendUpdate(
                 123L,
                 "https://github.com/lirik1254/abTestRepo",
                 new ContentDTO(UpdateType.COMMENT, "SomeTitle", "username", "5345345435", "answer"));

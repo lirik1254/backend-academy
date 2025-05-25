@@ -6,10 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
 import backend.academy.scrapper.clients.GitHubInfoClient;
 import backend.academy.scrapper.clients.StackOverflowClient;
-import backend.academy.scrapper.dbInitializeBase;
 import dto.AddLinkDTO;
 import dto.ContentDTO;
 import dto.UpdateType;
@@ -28,17 +28,26 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestConfig.class)
 @Disabled
-public class GetAllTagsTestsBase extends dbInitializeBase {
+public class GetAllTagsTestsBase extends ExternalInitBase {
     @MockitoBean
     GitHubInfoClient gitHubInfoClient;
 
     @MockitoBean
     StackOverflowClient stackOverflowClient;
+
+    @BeforeEach
+    void flushRedisContainer() throws Exception {
+        redis.execInContainer("redis-cli", "FLUSHALL");
+    }
 
     @BeforeEach
     public void clearDatabase() {

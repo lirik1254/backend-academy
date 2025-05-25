@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import backend.academy.scrapper.ExternalInitBase;
 import backend.academy.scrapper.TestConfig;
-import backend.academy.scrapper.dbInitializeBase;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,11 +18,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+            "resilience4j.retry.instances.defaultRetry.max-attempts=1",
+            "resilience4j.ratelimiter.configs.defaultConfig.limit-for-period=3000"
+        })
 @AutoConfigureMockMvc
 @Testcontainers
 @Import(TestConfig.class)
-public class AddLinkExceptionTests extends dbInitializeBase {
+public class AddLinkExceptionTests extends ExternalInitBase {
     @Test
     @DisplayName("Некорретный Tg-Chat-Id")
     public void test3() throws Exception {

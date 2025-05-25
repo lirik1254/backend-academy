@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import backend.academy.bot.BaseConfigure;
 import backend.academy.bot.services.TelegramBotService;
 import backend.academy.bot.utils.BotMessages;
 import com.pengrad.telegrambot.TelegramBot;

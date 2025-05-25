@@ -107,4 +107,21 @@ insert into scrapper.stackoverflow_content (id, updated_type) VALUES (:id, :upda
             LEFT JOIN scrapper.stackoverflow_content s ON c.id = s.id""";
         return template.query(findAllSql, contentRowMapper);
     }
+
+    public List<Content> getContentByRandomUrl(Long chatId) {
+        String sql =
+                """
+            select c.*, COALESCE(g.updated_type, s.updated_type) as updated_type from scrapper.content c
+            left join scrapper.github_content g ON c.id = g.id
+            left join scrapper.stackoverflow_content s ON c.id = s.id
+            where c.url_id = (select l.url_id
+            from scrapper.link l
+            where l.user_id = :chatId
+            order by random()
+            limit 1)""";
+
+        SqlParameterSource sqlParameterSource = new MapSqlParameterSource("chatId", chatId);
+
+        return template.query(sql, sqlParameterSource, contentRowMapper);
+    }
 }

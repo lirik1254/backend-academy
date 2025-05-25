@@ -49,7 +49,12 @@ public class UntrackCommand implements Command {
                     bot.execute(new SendMessage(chatId, "Вы вышли из меню ввода ссылки"));
                     return;
                 }
-                String retMessage = trackClient.unTrackLink(chatId, message);
+                String retMessage = "";
+                try {
+                    retMessage = trackClient.unTrackLink(chatId, message);
+                } catch (Exception e) {
+                    retMessage = "Ошибка";
+                }
                 if (retMessage.equals("Нет такой ссылки")) {
                     log.atInfo()
                             .addKeyValue("chatId", chatId)

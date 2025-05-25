@@ -1,0 +1,34 @@
+@startuml
+actor User
+participant "UI (XML)" as UI
+participant "Mobile App\n(Java + Android SDK)" as MobileApp
+participant "Серверная часть\n(Java + Spring)" as Server
+database PostgreSQL as PostgreSQL
+
+User -> UI: Нажимает лайк на проекте
+activate UI
+UI -> MobileApp: Событие лайка
+activate MobileApp
+
+MobileApp -> Server: Запрос на обновление лайков
+activate Server
+Server -> PostgreSQL: Обновление счетчика лайков
+activate PostgreSQL
+
+alt Успешное обновление
+    PostgreSQL --> Server: Новое количество лайков
+    deactivate PostgreSQL
+    Server --> MobileApp: Актуальное число лайков
+    deactivate Server
+    MobileApp -> UI: Обновить отображение лайков
+else Ошибка обновления
+    PostgreSQL --> Server: Ошибка
+    deactivate PostgreSQL
+    Server --> MobileApp: Ошибка операции
+    deactivate Server
+    MobileApp -> UI: Показать "Не удалось лайкнуть"
+end
+
+deactivate MobileApp
+deactivate UI
+@enduml

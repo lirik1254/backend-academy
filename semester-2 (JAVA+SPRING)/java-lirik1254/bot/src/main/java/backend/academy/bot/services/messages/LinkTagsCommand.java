@@ -36,9 +36,15 @@ public class LinkTagsCommand implements Command {
             case START -> {
                 log.atInfo()
                         .addKeyValue(CHAT_ID_STRING, chatId)
-                        .setMessage("Пользователя просят ввести url для прекращения отслеживания")
+                        .setMessage("Пользователя просят ввести url для вывода всех ссылок по тегам")
                         .log();
-                if (tagsClient.getAllTags(chatId).equals("У вас пока нет тегов")) {
+                String tagsClientAns = "";
+                try {
+                    tagsClientAns = tagsClient.getAllTags(chatId);
+                } catch (Exception e) {
+                    tagsClientAns = "Ошибка";
+                }
+                if (tagsClientAns.equals("У вас пока нет тегов")) {
                     bot.execute(new SendMessage(chatId, "У вас нет тегов"));
                     userStates.put(chatId, State.START);
                 } else {
@@ -57,11 +63,16 @@ public class LinkTagsCommand implements Command {
                     bot.execute(new SendMessage(chatId, "Вы вышли из меню ввода тегов"));
                     return;
                 }
-                String retMessage = tagLinksClient.getAllTagLinks(chatId, List.of(message.split(" ")));
+                String retMessage = "";
+                try {
+                    retMessage = tagLinksClient.getAllTagLinks(chatId, List.of(message.split(" ")));
+                } catch (Exception e) {
+                    retMessage = "Не удалось получить список отслеживаемых ссылок";
+                }
                 log.atInfo()
                         .addKeyValue(CHAT_ID_STRING, chatId)
                         .addKeyValue("userMessage", message)
-                        .setMessage("Отслеживание ссылки прекращено")
+                        .setMessage("Получил ссылки по тегам")
                         .log();
                 userStates.put(chatId, State.START);
                 bot.execute(new SendMessage(chatId, retMessage));

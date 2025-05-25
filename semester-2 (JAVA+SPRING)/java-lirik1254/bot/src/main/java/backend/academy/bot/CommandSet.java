@@ -24,7 +24,9 @@ public class CommandSet {
             new BotCommand("/track", "Начать отслеживание"),
             new BotCommand("/untrack", "Прекратить отслеживание"),
             new BotCommand("/tags", "Вывести все теги"),
-            new BotCommand("/linktags", "Вывести все ссылки по тегам")
+            new BotCommand("/linktags", "Вывести все ссылки по тегам"),
+            new BotCommand("/timesettings", "Настроить время отправки уведомлений"),
+            new BotCommand("/joke", "Получить шутку по контенту случайной отслеживаемой ссылки")
         };
 
         try {

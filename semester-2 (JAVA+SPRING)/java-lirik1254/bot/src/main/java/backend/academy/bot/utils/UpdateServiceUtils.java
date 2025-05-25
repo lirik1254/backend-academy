@@ -22,7 +22,7 @@ public class UpdateServiceUtils {
     }
 
     public String dateConverter(String date) {
-        Boolean isInteger = isInteger(date);
+        boolean isInteger = isInteger(date);
         if (isInteger) {
             date = toDate(Integer.parseInt(date));
         }

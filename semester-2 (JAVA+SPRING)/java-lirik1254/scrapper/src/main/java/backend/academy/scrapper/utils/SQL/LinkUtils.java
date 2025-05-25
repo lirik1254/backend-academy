@@ -30,7 +30,7 @@ public class LinkUtils {
             Long urlId = link.urlId();
             Long userId = link.userId();
             linkResponseDTOS.add(new LinkResponseDTO(
-                    Math.toIntExact(link.hashCode()),
+                    Math.toIntExact(urlId.hashCode() + userId.hashCode()),
                     urlRepositorySQL.getByUrlId(link.urlId()).url(),
                     tagRepositorySQL.getTagsByUrlIdAndUserId(urlId, userId).stream()
                             .map(LinkTags::tag)

@@ -20,7 +20,13 @@ public class StartCommand implements Command {
                 .addKeyValue("chatId", chatId)
                 .setMessage("Выполняется команда /start")
                 .log();
-        bot.execute(new SendMessage(chatId, registrationClient.registerUser(chatId)));
+        String returnMessage = "";
+        try {
+            returnMessage = registrationClient.registerUser(chatId);
+        } catch (Exception e) {
+            returnMessage = "Ошибка";
+        }
+        bot.execute(new SendMessage(chatId, returnMessage));
     }
 
     @Override
